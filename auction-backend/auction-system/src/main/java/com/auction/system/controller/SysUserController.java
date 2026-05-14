@@ -3,6 +3,7 @@ package com.auction.system.controller;
 import com.auction.common.core.ErrorCode;
 import com.auction.common.core.Result;
 import com.auction.common.exception.BizException;
+import com.auction.framework.security.LoginUser;
 import com.auction.system.convert.SysUserConvert;
 import com.auction.system.dto.SysUserLoginDTO;
 import com.auction.system.dto.SysUserRegisterDTO;
@@ -12,6 +13,7 @@ import com.auction.system.vo.SysUserLoginVO;
 import com.auction.system.vo.SysUserVO;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -46,6 +48,22 @@ public class SysUserController {
     @PostMapping("/login")
     public Result<SysUserLoginVO> login(@Valid @RequestBody SysUserLoginDTO loginDTO) {
         return Result.success(sysUserService.login(loginDTO));
+    }
+
+    /**
+     * 查询当前登录用户信息。
+     * AuthenticationPrincipal 会从 Spring Security 上下文中取出 JwtAuthFilter 放入的 LoginUser。
+     */
+    @GetMapping("/me")
+    public Result<SysUserVO> getCurrentUser(@AuthenticationPrincipal LoginUser loginUser) {
+        if (loginUser == null) {
+            throw new BizException(ErrorCode.UNAUTHORIZED);
+        }
+        SysUser user = sysUserService.getById(loginUser.getUserId());
+        if (user == null) {
+            throw new BizException(ErrorCode.USER_NOT_FOUND);
+        }
+        return Result.success(SysUserConvert.toVO(user));
     }
 
     /**

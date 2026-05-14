@@ -1,4 +1,4 @@
-package com.auction.system.config;
+package com.auction.framework.config;
 
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;

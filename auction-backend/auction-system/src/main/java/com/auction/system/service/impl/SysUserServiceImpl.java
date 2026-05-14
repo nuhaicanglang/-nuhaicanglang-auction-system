@@ -3,12 +3,12 @@ package com.auction.system.service.impl;
 import com.auction.common.core.ErrorCode;
 import com.auction.common.exception.BizException;
 import com.auction.common.util.SnowflakeIdWorker;
+import com.auction.framework.security.JwtTokenProvider;
 import com.auction.system.convert.SysUserConvert;
 import com.auction.system.dto.SysUserLoginDTO;
 import com.auction.system.dto.SysUserRegisterDTO;
 import com.auction.system.entity.SysUser;
 import com.auction.system.mapper.SysUserMapper;
-import com.auction.system.security.JwtTokenProvider;
 import com.auction.system.service.SysUserService;
 import com.auction.system.vo.SysUserLoginVO;
 import com.auction.system.vo.SysUserVO;
@@ -116,5 +116,4 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
     private String normalizeBlank(String value) {
         return StringUtils.hasText(value) ? value : null;
     }
-
 }

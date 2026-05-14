@@ -1,6 +1,6 @@
-package com.auction.system.security;
+package com.auction.framework.security;
 
-import com.auction.system.config.JwtProperties;
+import com.auction.framework.config.JwtProperties;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
@@ -13,7 +13,7 @@ import java.util.Date;
 
 /**
  * JWT 令牌工具。
- * 当前阶段主要负责登录成功后生成 token，后续权限拦截器会继续使用它解析和校验 token。
+ * 负责生成、解析和校验登录 token，是认证过滤器和登录服务共用的安全组件。
  */
 @Component
 public class JwtTokenProvider {
@@ -43,7 +43,7 @@ public class JwtTokenProvider {
 
     /**
      * 解析 token 中的声明数据。
-     * 如果 token 被篡改或已过期，JJWT 会抛出异常，后续统一在认证过滤器中处理。
+     * 如果 token 被篡改或已过期，JJWT 会抛出异常，由认证过滤器统一处理。
      */
     public Claims parseClaims(String token) {
         return Jwts.parser()
