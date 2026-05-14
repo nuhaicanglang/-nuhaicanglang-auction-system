@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <!-- 日志格式中加入 traceId，方便按一次请求追踪完整日志链路。 -->
+    <property name="LOG_PATTERN" value="%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level [%X{traceId}] %logger{50} - %msg%n"/>
+
+    <!-- 开发阶段先输出到控制台，后续可以扩展为按日期写入文件。 -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>${LOG_PATTERN}</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+    </appender>
+
+    <root level="INFO">
+        <appender-ref ref="CONSOLE"/>
+    </root>
+
+    <!-- 项目包开启 DEBUG，便于开发阶段查看 SQL 和业务日志。 -->
+    <logger name="com.auction" level="DEBUG"/>
+</configuration>

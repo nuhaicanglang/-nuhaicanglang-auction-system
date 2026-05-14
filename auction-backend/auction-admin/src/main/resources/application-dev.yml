@@ -1,0 +1,29 @@
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/auction?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai
+    username: root
+    password: root123456
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      database: 0
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: admin
+    password: admin123
+  elasticsearch:
+    uris: http://localhost:9200
+
+logging:
+  level:
+    com.auction: debug
+
+auction:
+  jwt:
+    # 开发环境 JWT 密钥，长度需要足够支持 HS256；生产环境不要直接写在配置文件中。
+    secret: auction-dev-jwt-secret-key-please-change-in-production-2026
+    # token 有效期，单位秒；当前设置为 2 小时。
+    expire-seconds: 7200
