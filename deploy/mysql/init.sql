@@ -234,3 +234,61 @@ CREATE TABLE IF NOT EXISTS `sys_login_log` (
     KEY `idx_username`    (`username`),
     KEY `idx_created_at`  (`created_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='登录日志';
+
+-- ============================
+-- 拍卖商品（核心表）
+-- ============================
+CREATE TABLE IF NOT EXISTS `biz_auction_item` (
+    `id`              BIGINT UNSIGNED NOT NULL,
+    `title`           VARCHAR(100)    NOT NULL,
+    `subtitle`        VARCHAR(200)    DEFAULT NULL,
+    `description`     LONGTEXT                                COMMENT '富文本HTML',
+    `category_id`     BIGINT UNSIGNED NOT NULL,
+    `category_path`   VARCHAR(500)    NOT NULL                COMMENT '冗余分类路径',
+    `cover_image`     VARCHAR(500)    NOT NULL,
+    `images`          JSON            DEFAULT NULL            COMMENT '["url1","url2",...]',
+    `seller_id`       BIGINT UNSIGNED NOT NULL,
+
+    `auction_type`    TINYINT UNSIGNED NOT NULL DEFAULT 1     COMMENT '1英式/2荷兰式(预留)',
+    `start_price`     DECIMAL(12,2)   NOT NULL,
+    `current_price`   DECIMAL(12,2)   NOT NULL                COMMENT '当前价(初始=起拍价)',
+    `bid_increment`   DECIMAL(12,2)   NOT NULL                COMMENT '加价幅度',
+    `buy_now_price`   DECIMAL(12,2)   DEFAULT NULL            COMMENT '一口价',
+    `deposit`         DECIMAL(12,2)   NOT NULL DEFAULT 0      COMMENT '保证金',
+
+    `start_time`      DATETIME        NOT NULL,
+    `end_time`        DATETIME        NOT NULL,
+    `actual_end_time` DATETIME        DEFAULT NULL            COMMENT '实际结束(反狙击延长)',
+
+    `status`          TINYINT UNSIGNED NOT NULL DEFAULT 1     COMMENT '1待审/2待开/3进行/4已结/5已成/6流拍/7下架',
+    `audit_status`    TINYINT UNSIGNED NOT NULL DEFAULT 0     COMMENT '0待审/1通过/2驳回',
+    `audit_remark`    VARCHAR(255)    DEFAULT NULL,
+    `audit_by`        BIGINT UNSIGNED DEFAULT NULL,
+    `audit_at`        DATETIME        DEFAULT NULL,
+
+    `winner_id`       BIGINT UNSIGNED DEFAULT NULL,
+    `final_price`     DECIMAL(12,2)   DEFAULT NULL,
+
+    `bid_count`       INT UNSIGNED    NOT NULL DEFAULT 0      COMMENT '出价次数(冗余)',
+    `view_count`      INT UNSIGNED    NOT NULL DEFAULT 0      COMMENT '浏览数(冗余)',
+    `favorite_count`  INT UNSIGNED    NOT NULL DEFAULT 0      COMMENT '收藏数',
+
+    `is_anti_snipe`   TINYINT UNSIGNED NOT NULL DEFAULT 1,
+    `anti_snipe_min`  INT UNSIGNED    NOT NULL DEFAULT 5      COMMENT '反狙击延长分钟',
+
+    `tenant_id`       BIGINT UNSIGNED NOT NULL DEFAULT 0,
+    `created_by`      BIGINT UNSIGNED NOT NULL,
+    `created_at`      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_by`      BIGINT UNSIGNED DEFAULT NULL,
+    `updated_at`      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    `deleted`         TINYINT UNSIGNED NOT NULL DEFAULT 0,
+    `version`         INT UNSIGNED    NOT NULL DEFAULT 0      COMMENT '乐观锁',
+
+    PRIMARY KEY (`id`),
+    KEY `idx_seller`         (`seller_id`),
+    KEY `idx_category`       (`category_id`),
+    KEY `idx_status_endtime` (`status`, `end_time`),
+    KEY `idx_status_created` (`status`, `created_at`),
+    KEY `idx_endtime`        (`end_time`),
+    KEY `idx_winner`         (`winner_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='拍卖商品';
