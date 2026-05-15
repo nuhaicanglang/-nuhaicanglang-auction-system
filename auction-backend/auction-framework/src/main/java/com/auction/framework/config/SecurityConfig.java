@@ -50,6 +50,8 @@ public class SecurityConfig {
                                 "/api/ping",
                                 "/api/system/users/register",
                                 "/api/system/users/login",
+                                "/api/system/users/captcha",
+                                "/api/system/users/refresh",
                                 "/doc.html",
                                 "/webjars/**",
                                 "/v3/api-docs/**",

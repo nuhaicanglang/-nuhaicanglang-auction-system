@@ -25,4 +25,9 @@ public class SysUserLoginVO {
      * 用户拥有的角色编码列表，前端可据此控制菜单显隐和按钮权限。
      */
     private List<String> roles;
+
+    /**
+     * Refresh Token，用于在 Access Token 过期后静默续签。
+     */
+    private String refreshToken;
 }

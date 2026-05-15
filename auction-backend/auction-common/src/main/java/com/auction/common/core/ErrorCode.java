@@ -27,6 +27,8 @@ public enum ErrorCode {
     PHONE_EXISTS(10008, "手机号已被使用"),
     USER_DISABLED(10009, "账号已被禁用"),
     USER_BLACKLISTED(10010, "账号已被拉黑"),
+    ACCOUNT_LOCKED(10011, "登录失败次数过多，账号已锁定15分钟"),
+    CAPTCHA_REQUIRED(10012, "连续登录失败，请输入图形验证码"),
 
     /**
      * 300xx：拍品相关错误。

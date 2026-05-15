@@ -21,4 +21,14 @@ public class SysUserLoginDTO {
      */
     @NotBlank(message = "密码不能为空")
     private String password;
+
+    /**
+     * 验证码 UUID（连续登录失败 >= 3 次后必传）。
+     */
+    private String captchaUuid;
+
+    /**
+     * 验证码答案（连续登录失败 >= 3 次后必传）。
+     */
+    private String captchaCode;
 }

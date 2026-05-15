@@ -11,6 +11,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Date;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * JWT 令牌工具。
@@ -30,14 +31,40 @@ public class JwtTokenProvider {
      * subject 存用户ID，username 和 roles 放在自定义声明中，
      * 这样每次请求解析 token 就能知道当前用户的角色，无需再查数据库。
      */
+    /** Refresh Token 有效期：7 天 */
+    private static final long REFRESH_EXPIRE_SECONDS = 7 * 24 * 3600;
+
+    /**
+     * 创建 Access Token（带角色列表）。
+     * 包含 jti（唯一ID）和 type=access 标识，用于黑名单和区分 token 类型。
+     */
     public String createToken(Long userId, String username, List<String> roles) {
         Instant now = Instant.now();
         Instant expireAt = now.plusSeconds(jwtProperties.getExpireSeconds());
 
         return Jwts.builder()
+                .id(UUID.randomUUID().toString())
                 .subject(String.valueOf(userId))
                 .claim("username", username)
                 .claim("roles", roles)
+                .claim("type", "access")
+                .issuedAt(Date.from(now))
+                .expiration(Date.from(expireAt))
+                .signWith(getSecretKey(), Jwts.SIG.HS256)
+                .compact();
+    }
+
+    /**
+     * 创建 Refresh Token，只携带 userId，有效期 7 天。
+     */
+    public String createRefreshToken(Long userId) {
+        Instant now = Instant.now();
+        Instant expireAt = now.plusSeconds(REFRESH_EXPIRE_SECONDS);
+
+        return Jwts.builder()
+                .id(UUID.randomUUID().toString())
+                .subject(String.valueOf(userId))
+                .claim("type", "refresh")
                 .issuedAt(Date.from(now))
                 .expiration(Date.from(expireAt))
                 .signWith(getSecretKey(), Jwts.SIG.HS256)
@@ -54,6 +81,13 @@ public class JwtTokenProvider {
                 .build()
                 .parseSignedClaims(token)
                 .getPayload();
+    }
+
+    /**
+     * 获取 token 的过期时间。
+     */
+    public Date getExpiration(String token) {
+        return parseClaims(token).getExpiration();
     }
 
     /**

@@ -35,8 +35,11 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
     private final JwtTokenProvider jwtTokenProvider;
 
+    private final JwtBlacklistService jwtBlacklistService;
+
     /**
      * 解析 token 并建立 Spring Security 登录态；没有 token 的请求交给后续授权规则判断是否允许访问。
+     * 增加黑名单检查：登出后的 token 不再有效。
      */
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
@@ -44,6 +47,11 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         String token = resolveToken(request);
         if (StringUtils.hasText(token) && SecurityContextHolder.getContext().getAuthentication() == null) {
             try {
+                // 黑名单检查：登出后的 token 直接跳过
+                if (jwtBlacklistService.isBlacklisted(token)) {
+                    filterChain.doFilter(request, response);
+                    return;
+                }
                 Claims claims = jwtTokenProvider.parseClaims(token);
                 Long userId = Long.valueOf(claims.getSubject());
                 String username = claims.get("username", String.class);
