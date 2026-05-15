@@ -7,8 +7,12 @@ import com.auction.framework.security.JwtTokenProvider;
 import com.auction.system.convert.SysUserConvert;
 import com.auction.system.dto.SysUserLoginDTO;
 import com.auction.system.dto.SysUserRegisterDTO;
+import com.auction.system.entity.SysRole;
 import com.auction.system.entity.SysUser;
+import com.auction.system.entity.SysUserRole;
+import com.auction.system.mapper.SysRoleMapper;
 import com.auction.system.mapper.SysUserMapper;
+import com.auction.system.mapper.SysUserRoleMapper;
 import com.auction.system.service.SysUserService;
 import com.auction.system.vo.SysUserLoginVO;
 import com.auction.system.vo.SysUserVO;
@@ -20,6 +24,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * 用户业务实现类。
@@ -32,6 +38,10 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
     private final PasswordEncoder passwordEncoder;
 
     private final JwtTokenProvider jwtTokenProvider;
+
+    private final SysRoleMapper sysRoleMapper;
+
+    private final SysUserRoleMapper sysUserRoleMapper;
 
     private final SnowflakeIdWorker snowflakeIdWorker = new SnowflakeIdWorker();
 
@@ -61,6 +71,14 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         user.setDeleted(0);
 
         save(user);
+
+        // 新用户自动分配 USER 角色（角色ID=3 对应种子数据中的普通用户角色）
+        SysUserRole userRole = new SysUserRole();
+        userRole.setUserId(user.getId());
+        userRole.setRoleId(3L);
+        userRole.setCreatedAt(LocalDateTime.now());
+        sysUserRoleMapper.insert(userRole);
+
         return SysUserConvert.toVO(user);
     }
 
@@ -88,8 +106,12 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         updateById(user);
 
         SysUserLoginVO loginVO = new SysUserLoginVO();
-        loginVO.setToken(jwtTokenProvider.createToken(user.getId(), user.getUsername()));
+        // 从数据库加载用户角色列表，写入 JWT token
+        List<String> roleCodes = sysRoleMapper.selectRolesByUserId(user.getId())
+                .stream().map(SysRole::getCode).collect(Collectors.toList());
+        loginVO.setToken(jwtTokenProvider.createToken(user.getId(), user.getUsername(), roleCodes));
         loginVO.setUser(SysUserConvert.toVO(user));
+        loginVO.setRoles(roleCodes);
         return loginVO;
     }
 

@@ -6,6 +6,7 @@ import com.auction.common.exception.BizException;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.validation.BindException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -35,6 +36,15 @@ public class GlobalExceptionHandler {
     @ExceptionHandler({MethodArgumentNotValidException.class, BindException.class, ConstraintViolationException.class})
     public Result<Void> handleValidationException(Exception e) {
         return Result.<Void>fail(ErrorCode.PARAM_ERROR).withTraceId(MDC.get(TRACE_ID));
+    }
+
+    /**
+     * 处理权限不足异常。
+     * @PreAuthorize 校验失败时会抛出 AccessDeniedException，在这里统一返回 FORBIDDEN。
+     */
+    @ExceptionHandler(AccessDeniedException.class)
+    public Result<Void> handleAccessDeniedException(AccessDeniedException e) {
+        return Result.<Void>fail(ErrorCode.FORBIDDEN).withTraceId(MDC.get(TRACE_ID));
     }
 
     /**

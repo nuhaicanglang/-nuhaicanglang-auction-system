@@ -63,7 +63,9 @@ public class SysUserController {
         if (user == null) {
             throw new BizException(ErrorCode.USER_NOT_FOUND);
         }
-        return Result.success(SysUserConvert.toVO(user));
+        SysUserVO vo = SysUserConvert.toVO(user);
+        vo.setRoles(loginUser.getRoles());
+        return Result.success(vo);
     }
 
     /**

@@ -3,6 +3,7 @@ package com.auction.system.vo;
 import lombok.Data;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * 用户返回对象。
@@ -55,4 +56,9 @@ public class SysUserVO {
      * 创建时间。
      */
     private LocalDateTime createdAt;
+
+    /**
+     * 用户角色编码列表（仅在 /me 等需要角色信息的接口中填充）。
+     */
+    private List<String> roles;
 }

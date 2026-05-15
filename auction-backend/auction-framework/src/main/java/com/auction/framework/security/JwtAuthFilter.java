@@ -14,8 +14,12 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+
 import java.io.IOException;
 import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * JWT 认证过滤器。
@@ -43,10 +47,22 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                 Claims claims = jwtTokenProvider.parseClaims(token);
                 Long userId = Long.valueOf(claims.getSubject());
                 String username = claims.get("username", String.class);
-                LoginUser loginUser = new LoginUser(userId, username);
+
+                // 从 JWT claims 中读取角色列表，转换为 Spring Security 的 GrantedAuthority
+                @SuppressWarnings("unchecked")
+                List<String> roles = claims.get("roles", List.class);
+                if (roles == null) {
+                    roles = Collections.emptyList();
+                }
+                LoginUser loginUser = new LoginUser(userId, username, roles);
+
+                // Spring Security 的 hasRole('ADMIN') 会自动匹配 ROLE_ADMIN
+                List<SimpleGrantedAuthority> authorities = roles.stream()
+                        .map(role -> new SimpleGrantedAuthority("ROLE_" + role))
+                        .collect(Collectors.toList());
 
                 UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                        loginUser, null, Collections.emptyList());
+                        loginUser, null, authorities);
                 authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             } catch (JwtException | IllegalArgumentException e) {

@@ -10,6 +10,7 @@ import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Date;
+import java.util.List;
 
 /**
  * JWT 令牌工具。
@@ -25,16 +26,18 @@ public class JwtTokenProvider {
     }
 
     /**
-     * 创建登录 token。
-     * subject 存用户ID，username 放在自定义声明中，便于后续从 token 中识别当前用户。
+     * 创建登录 token（带角色列表）。
+     * subject 存用户ID，username 和 roles 放在自定义声明中，
+     * 这样每次请求解析 token 就能知道当前用户的角色，无需再查数据库。
      */
-    public String createToken(Long userId, String username) {
+    public String createToken(Long userId, String username, List<String> roles) {
         Instant now = Instant.now();
         Instant expireAt = now.plusSeconds(jwtProperties.getExpireSeconds());
 
         return Jwts.builder()
                 .subject(String.valueOf(userId))
                 .claim("username", username)
+                .claim("roles", roles)
                 .issuedAt(Date.from(now))
                 .expiration(Date.from(expireAt))
                 .signWith(getSecretKey(), Jwts.SIG.HS256)
