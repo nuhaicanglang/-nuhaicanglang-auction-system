@@ -3,6 +3,8 @@ package com.auction.system.controller;
 import com.auction.common.core.ErrorCode;
 import com.auction.common.core.Result;
 import com.auction.common.exception.BizException;
+import com.auction.framework.annotation.Log;
+import com.auction.framework.security.SecurityUtils;
 import com.auction.system.convert.SysRoleConvert;
 import com.auction.system.convert.SysUserConvert;
 import com.auction.system.dto.AssignRolesDTO;
@@ -16,7 +18,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -93,6 +97,7 @@ public class AdminUserController {
      */
     @PutMapping("/{userId}/status")
     @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
+    @Log(module = "用户管理", businessType = "EDIT", description = "修改用户状态")
     public Result<Void> changeUserStatus(@PathVariable Long userId,
                                          @RequestParam Integer status) {
         SysUser user = sysUserService.getById(userId);
@@ -100,6 +105,48 @@ public class AdminUserController {
             throw new BizException(ErrorCode.USER_NOT_FOUND);
         }
         user.setStatus(status);
+        sysUserService.updateById(user);
+        return Result.success(null);
+    }
+
+    /**
+     * 拉黑用户。
+     * 设置 status=2，记录拉黑原因和操作人。
+     * 拉黑后用户的 JWT 将无法通过登录校验（登录时检查 status）。
+     */
+    @PostMapping("/{userId}/blacklist")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
+    @Log(module = "用户管理", businessType = "EDIT", description = "拉黑用户")
+    public Result<Void> blacklistUser(@PathVariable Long userId,
+                                      @RequestBody Map<String, String> body) {
+        SysUser user = sysUserService.getById(userId);
+        if (user == null) {
+            throw new BizException(ErrorCode.USER_NOT_FOUND);
+        }
+        user.setStatus(2);
+        user.setBlacklistReason(body.getOrDefault("reason", ""));
+        user.setBlacklistedBy(SecurityUtils.getUserId());
+        user.setBlacklistedAt(LocalDateTime.now());
+        sysUserService.updateById(user);
+        return Result.success(null);
+    }
+
+    /**
+     * 解除拉黑。
+     * 恢复用户状态为正常，清除拉黑信息。
+     */
+    @DeleteMapping("/{userId}/blacklist")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
+    @Log(module = "用户管理", businessType = "EDIT", description = "解除拉黑")
+    public Result<Void> unblacklistUser(@PathVariable Long userId) {
+        SysUser user = sysUserService.getById(userId);
+        if (user == null) {
+            throw new BizException(ErrorCode.USER_NOT_FOUND);
+        }
+        user.setStatus(1);
+        user.setBlacklistReason(null);
+        user.setBlacklistedBy(null);
+        user.setBlacklistedAt(null);
         sysUserService.updateById(user);
         return Result.success(null);
     }

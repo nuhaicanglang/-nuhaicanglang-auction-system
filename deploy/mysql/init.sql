@@ -142,3 +142,49 @@ VALUES (1, 'admin', '系统管理员', '$2a$10$N8wB8gD4kZ2hQfvE6rN5/.HpYwvJ7xJiC
 
 -- admin 绑定超级管理员角色
 INSERT IGNORE INTO `sys_user_role`(`user_id`, `role_id`) VALUES (1, 1);
+
+-- ============================
+-- 操作日志
+-- ============================
+CREATE TABLE IF NOT EXISTS `sys_oper_log` (
+    `id`              BIGINT UNSIGNED NOT NULL,
+    `trace_id`        VARCHAR(64)     DEFAULT NULL            COMMENT '链路ID',
+    `module`          VARCHAR(50)     NOT NULL                COMMENT '模块名',
+    `business_type`   VARCHAR(50)     NOT NULL                COMMENT '业务类型 NEW/EDIT/DELETE...',
+    `description`     VARCHAR(255)    DEFAULT NULL,
+    `method`          VARCHAR(255)    NOT NULL                COMMENT '调用方法',
+    `request_url`     VARCHAR(500)    NOT NULL,
+    `request_method`  VARCHAR(10)     NOT NULL                COMMENT 'GET/POST...',
+    `request_params`  TEXT            DEFAULT NULL,
+    `response_data`   TEXT            DEFAULT NULL,
+    `oper_user_id`    BIGINT UNSIGNED DEFAULT NULL,
+    `oper_user_name`  VARCHAR(50)     DEFAULT NULL,
+    `oper_ip`         VARCHAR(50)     DEFAULT NULL,
+    `user_agent`      VARCHAR(500)    DEFAULT NULL,
+    `status`          TINYINT UNSIGNED NOT NULL               COMMENT '0成功/1失败',
+    `error_msg`       VARCHAR(2000)   DEFAULT NULL,
+    `cost_ms`         INT UNSIGNED    DEFAULT NULL            COMMENT '耗时毫秒',
+    `created_at`      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    KEY `idx_user`        (`oper_user_id`),
+    KEY `idx_created_at`  (`created_at`),
+    KEY `idx_status`      (`status`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='操作日志';
+
+-- ============================
+-- 登录日志
+-- ============================
+CREATE TABLE IF NOT EXISTS `sys_login_log` (
+    `id`              BIGINT UNSIGNED NOT NULL,
+    `username`        VARCHAR(50)     NOT NULL,
+    `user_id`         BIGINT UNSIGNED DEFAULT NULL,
+    `ip`              VARCHAR(50)     DEFAULT NULL,
+    `browser`         VARCHAR(50)     DEFAULT NULL,
+    `os`              VARCHAR(50)     DEFAULT NULL,
+    `status`          TINYINT UNSIGNED NOT NULL               COMMENT '0成功/1失败',
+    `msg`             VARCHAR(255)    DEFAULT NULL,
+    `created_at`      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    KEY `idx_username`    (`username`),
+    KEY `idx_created_at`  (`created_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='登录日志';
