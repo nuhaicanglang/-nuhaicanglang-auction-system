@@ -53,6 +53,7 @@ public class SecurityConfig {
                                 "/api/system/users/captcha",
                                 "/api/system/users/refresh",
                                 "/api/categories/**",
+                                "/uploads/**",
                                 "/doc.html",
                                 "/webjars/**",
                                 "/v3/api-docs/**",

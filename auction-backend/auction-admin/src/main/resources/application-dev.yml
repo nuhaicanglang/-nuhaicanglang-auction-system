@@ -17,6 +17,16 @@ spring:
   elasticsearch:
     uris: http://localhost:9200
 
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 30MB
+
+storage:
+  type: local
+  local-path: ./uploads
+  local-url-prefix: /uploads
+
 logging:
   level:
     com.auction: debug
