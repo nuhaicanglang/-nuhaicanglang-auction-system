@@ -292,3 +292,25 @@ CREATE TABLE IF NOT EXISTS `biz_auction_item` (
     KEY `idx_endtime`        (`end_time`),
     KEY `idx_winner`         (`winner_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='拍卖商品';
+
+-- ============================
+-- 出价记录
+-- ============================
+CREATE TABLE IF NOT EXISTS `biz_bid` (
+    `id`                BIGINT UNSIGNED NOT NULL,
+    `item_id`           BIGINT UNSIGNED NOT NULL,
+    `bidder_id`         BIGINT UNSIGNED NOT NULL,
+    `bid_price`         DECIMAL(12,2)   NOT NULL,
+    `bid_time`          DATETIME(3)     NOT NULL                COMMENT '毫秒级时间',
+    `bid_type`          TINYINT UNSIGNED NOT NULL DEFAULT 1     COMMENT '1正常/2自动/3一口价',
+    `status`            TINYINT UNSIGNED NOT NULL DEFAULT 1     COMMENT '1有效/2已被超/3已撤销',
+    `client_ip`         VARCHAR(50)     DEFAULT NULL,
+    `client_request_id` VARCHAR(64)     DEFAULT NULL            COMMENT '客户端幂等ID',
+    `tenant_id`         BIGINT UNSIGNED NOT NULL DEFAULT 0,
+    `created_at`        DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_request_id`    (`client_request_id`),
+    KEY `idx_item_time`           (`item_id`, `bid_time` DESC),
+    KEY `idx_item_price`          (`item_id`, `bid_price` DESC),
+    KEY `idx_bidder`              (`bidder_id`, `created_at` DESC)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='出价记录';

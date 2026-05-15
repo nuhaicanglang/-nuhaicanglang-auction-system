@@ -61,7 +61,7 @@ public class SecurityConfig {
                                 "/swagger-ui/**",
                                 "/actuator/health"
                         ).permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/items", "/api/items/*").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/items", "/api/items/*", "/api/items/*/bids").permitAll()
                         .anyRequest().authenticated())
                 .exceptionHandling(exception -> exception
                         .authenticationEntryPoint((request, response, authException) ->
