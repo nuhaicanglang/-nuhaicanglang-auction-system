@@ -172,6 +172,52 @@ CREATE TABLE IF NOT EXISTS `sys_oper_log` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='操作日志';
 
 -- ============================
+-- 商品分类(树形，最多三级)
+-- ============================
+CREATE TABLE IF NOT EXISTS `biz_category` (
+    `id`              BIGINT UNSIGNED NOT NULL,
+    `parent_id`       BIGINT UNSIGNED NOT NULL DEFAULT 0      COMMENT '父分类，0=根',
+    `path`            VARCHAR(500)    NOT NULL                COMMENT '路径如 100/110/111，加速祖先查询',
+    `level`           TINYINT UNSIGNED NOT NULL DEFAULT 1     COMMENT '层级 1/2/3',
+    `name`            VARCHAR(50)     NOT NULL,
+    `icon`            VARCHAR(255)    DEFAULT NULL,
+    `description`     VARCHAR(500)    DEFAULT NULL,
+    `sort_order`      INT             NOT NULL DEFAULT 0,
+    `status`          TINYINT UNSIGNED NOT NULL DEFAULT 1     COMMENT '1启用/0停用',
+    `item_count`      INT UNSIGNED    NOT NULL DEFAULT 0      COMMENT '在售商品数（冗余）',
+    `created_at`      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at`      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    `deleted`         TINYINT UNSIGNED NOT NULL DEFAULT 0,
+    PRIMARY KEY (`id`),
+    KEY `idx_parent`  (`parent_id`),
+    KEY `idx_path`    (`path`),
+    KEY `idx_status`  (`status`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='商品分类';
+
+-- 种子数据：三级分类示例
+INSERT IGNORE INTO `biz_category`(`id`, `parent_id`, `path`, `level`, `name`, `sort_order`) VALUES
+-- 一级分类
+(100, 0, '100',         1, '艺术品', 1),
+(200, 0, '200',         1, '收藏品', 2),
+(300, 0, '300',         1, '数码',   3),
+(400, 0, '400',         1, '奢侈品', 4),
+(500, 0, '500',         1, '珠宝',   5),
+(900, 0, '900',         1, '其他',   99),
+-- 二级：艺术品
+(110, 100, '100/110',   2, '字画',  1),
+(120, 100, '100/120',   2, '雕塑',  2),
+-- 三级：字画下
+(111, 110, '100/110/111', 3, '国画', 1),
+(112, 110, '100/110/112', 3, '油画', 2),
+(113, 110, '100/110/113', 3, '书法', 3),
+-- 二级：数码
+(310, 300, '300/310',   2, '手机',  1),
+(320, 300, '300/320',   2, '电脑',  2),
+(330, 300, '300/330',   2, '相机',  3),
+-- 二级：其他
+(910, 900, '900/910',   2, '其他',  1);
+
+-- ============================
 -- 登录日志
 -- ============================
 CREATE TABLE IF NOT EXISTS `sys_login_log` (

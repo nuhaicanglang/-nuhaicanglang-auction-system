@@ -21,6 +21,11 @@
         </dependency>
         <dependency>
             <groupId>com.auction</groupId>
+            <artifactId>auction-framework</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.auction</groupId>
             <artifactId>auction-system</artifactId>
             <version>${project.version}</version>
         </dependency>
