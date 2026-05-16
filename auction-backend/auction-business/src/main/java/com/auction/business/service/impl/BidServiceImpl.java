@@ -1,5 +1,7 @@
 package com.auction.business.service.impl;
 
+import com.auction.business.bid.BidContext;
+import com.auction.business.bid.BidValidatorChain;
 import com.auction.business.entity.BizAuctionItem;
 import com.auction.business.entity.BizBid;
 import com.auction.business.mapper.BizBidMapper;
@@ -48,22 +50,23 @@ public class BidServiceImpl implements BidService {
     private final DefaultRedisScript<Long> bidScript;
     private final AuctionItemService auctionItemService;
     private final BizBidMapper bidMapper;
+    private final BidValidatorChain validatorChain;
     private final SnowflakeIdWorker idWorker = new SnowflakeIdWorker();
 
     @Override
     public BidResultVO placeBid(Long itemId, Long userId, BigDecimal price,
                                 String requestId, String clientIp) {
-        // 1. 加载商品并校验
-        BizAuctionItem item = auctionItemService.getById(itemId);
-        if (item == null) {
-            throw new BizException(30003, "商品不存在");
-        }
-        if (item.getStatus() != 3) {
-            throw new BizException(40003, "拍卖未开始或已结束");
-        }
-        if (item.getSellerId().equals(userId)) {
-            throw new BizException(40002, "不能给自己的商品出价");
-        }
+        // 1. 责任链校验：参数 → 商品状态 → 不能给自己出价 → 频率 → 价格
+        //    任一节点失败即抛 BizException 中断流程。商品对象由链中加载并写入 ctx。
+        BidContext ctx = BidContext.builder()
+                .itemId(itemId)
+                .userId(userId)
+                .price(price)
+                .requestId(requestId)
+                .clientIp(clientIp)
+                .build();
+        validatorChain.execute(ctx);
+        BizAuctionItem item = ctx.getItem();
 
         // 2. 执行 Lua 脚本原子出价
         long bidId = idWorker.nextId();
