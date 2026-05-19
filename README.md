@@ -4,7 +4,7 @@
 
 ## 项目状态
 
-当前已完成到 **阶段 3 / Day 12：出价校验链**。
+当前已完成到 **阶段 3 / Day 13：WebSocket 实时推送**。
 
 | 阶段 | 主题 | 状态 | 主要产出 |
 |---|---|---|---|
@@ -15,7 +15,7 @@
 | Day 10 | Redis 预热与 Lua 脚本 | 已完成 | `RedisKey`、`bid.lua`、`BidScriptConfig`、启动预热拍卖中商品价格 |
 | Day 11 | 出价主流程 | 已完成 | `BidController`、`BidServiceImpl`、Redis Lua 原子出价、出价记录 |
 | Day 12 | 出价校验链 | 已完成 | 责任链 + 模板方法：参数、商品状态、不能给自己出价、频率、价格校验 |
-| Day 13 | WebSocket 实时推送 | 下一步 | `WebSocketConfig`、`JwtHandshakeInterceptor`、`WsPusher` |
+| Day 13 | WebSocket 实时推送 | 已完成 | `WebSocketConfig` STOMP/SockJS、`JwtHandshakeInterceptor` URL token 鉴权、`WsPusher` 三主题推送、出价后广播 |
 
 ## 技术栈
 
@@ -448,16 +448,48 @@ Authorization: Bearer <token>
 | `105dba9` | 商品发布、查询、审核、MyBatis-Plus 分页/乐观锁 |
 | `cde7a75` | Day 10~11：Redis Lua 原子出价、BidService、BidController、Redis 预热 |
 | `817bfe1` | Day 12：出价校验链（责任链 + 模板方法） |
+| `a2f251c` | Day 13：WebSocket STOMP 实时推送（依赖、配置、拦截器、WsPusher、出价广播） |
+
+## WebSocket 使用说明
+
+### 连接方式
+
+```text
+ws://localhost:8080/api/ws?token=<jwt_access_token>
+```
+
+> 使用 SockJS 客户端（stompjs）连接，未携带 token 也可连（订阅公开主题）。
+
+### 订阅主题
+
+| 主题 | 触发时机 | 消息示例 |
+|---|---|---|
+| `/topic/auction/{itemId}` | 每次出价成功 | `{"type":"BID_PLACED","currentPrice":120,...}` |
+| `/topic/auction/{itemId}/state` | 状态变化（开拍/流拍/成交） | `{"type":"STATE_CHANGE","newStatus":4,...}` |
+| `/user/queue/notification` | 个人通知（被超价等） | `{"type":"NOTIFICATION","title":"..."}` |
+
+### 前端接入示例（stompjs）
+
+```js
+const client = new Client({
+  webSocketFactory: () => new SockJS('http://localhost:8080/api/ws?token=' + token)
+});
+client.onConnect = () => {
+  client.subscribe('/topic/auction/123456', (msg) => {
+    const data = JSON.parse(msg.body);
+    console.log('新出价：', data.currentPrice);
+  });
+};
+client.activate();
+```
 
 ## 下一步
 
-继续 **Day 13：WebSocket 实时推送**：
+继续 **Day 14：反狙击延时 + 一口价**：
 
-- 添加 `spring-boot-starter-websocket`
-- 实现 `WebSocketConfig` + STOMP SimpleBroker
-- 实现 `JwtHandshakeInterceptor`
-- 封装 `WsPusher`
-- 出价成功后推送 `/topic/auction/{itemId}`
+- 出价时间接近结束时自动延长拍卖（反狙击）
+- 一口价逻辑：出价 ≥ `buy_now_price` 直接成交
+- 状态流转事件通过 `WsPusher.pushAuctionStateChange` 广播
 
 ## README 维护约定
 
