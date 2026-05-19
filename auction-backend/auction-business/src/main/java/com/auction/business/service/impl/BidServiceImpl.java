@@ -10,6 +10,7 @@ import com.auction.business.service.BidService;
 import com.auction.business.vo.BidResultVO;
 import com.auction.business.vo.BidVO;
 import com.auction.common.exception.BizException;
+import com.auction.framework.websocket.WsPusher;
 import com.auction.common.util.SnowflakeIdWorker;
 import com.auction.framework.redis.RedisKey;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -51,6 +52,7 @@ public class BidServiceImpl implements BidService {
     private final AuctionItemService auctionItemService;
     private final BizBidMapper bidMapper;
     private final BidValidatorChain validatorChain;
+    private final WsPusher wsPusher;
     private final SnowflakeIdWorker idWorker = new SnowflakeIdWorker();
 
     @Override
@@ -122,6 +124,13 @@ public class BidServiceImpl implements BidService {
                 .update();
 
         log.info("出价成功: itemId={}, userId={}, price={}, bidId={}", itemId, userId, price, bidId);
+
+        // 5. WebSocket 实时推送：将出价结果广播给所有订阅该商品的客户端
+        //    bidderName 此处使用简单脱敏，后续可优化为查 nickname
+        String idStr = String.valueOf(userId);
+        String bidderName = idStr.charAt(0) + "***" + idStr.charAt(idStr.length() - 1);
+        wsPusher.pushBidPlaced(itemId, userId, bidderName, price, bidId);
+
         return new BidResultVO(bidId, price);
     }
 

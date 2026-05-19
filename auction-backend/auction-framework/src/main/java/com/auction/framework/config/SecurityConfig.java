@@ -59,7 +59,8 @@ public class SecurityConfig {
                                 "/webjars/**",
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",
-                                "/actuator/health"
+                                "/actuator/health",
+                                "/api/ws/**"   // WebSocket/SockJS 握手端点，鉴权由 JwtHandshakeInterceptor 完成
                         ).permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/items", "/api/items/*", "/api/items/*/bids").permitAll()
                         .anyRequest().authenticated())
