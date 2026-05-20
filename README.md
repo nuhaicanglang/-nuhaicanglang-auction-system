@@ -461,7 +461,7 @@ Authorization: Bearer <token>
 | `1790d29` | Day 15：100并发压测、Tomcat/HikariCP/Lettuce调优、压测报告 |
 | `50153cf` | Day 16：RabbitMQ 配置（Exchange/Queue/DLX/Confirm/手动ack） |
 | `e6d38e4` | Day 17：出价持久化消费者（BidPersistConsumer + BidMessage + 异步落库） |
-| `本次提交` | Day 18：延迟队列拍卖结算（AuctionSettleConsumer + TTL延迟 + 反狙击重投） |
+| `ab13dfc` | Day 18：延迟队列拍卖结算（AuctionSettleConsumer + TTL延迟 + 反狙击重投） |
 
 ## WebSocket 使用说明
 
