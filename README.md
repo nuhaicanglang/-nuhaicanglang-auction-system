@@ -4,7 +4,7 @@
 
 ## 项目状态
 
-当前已完成到 **阶段 3 / Day 14：反狙击延时 + 一口价**。
+当前已完成到 **阶段 3 / Day 15：压测与调优**。
 
 | 阶段 | 主题 | 状态 | 主要产出 |
 |---|---|---|---|
@@ -17,6 +17,7 @@
 | Day 12 | 出价校验链 | 已完成 | 责任链 + 模板方法：参数、商品状态、不能给自己出价、频率、价格校验 |
 | Day 13 | WebSocket 实时推送 | 已完成 | `WebSocketConfig` STOMP/SockJS、`JwtHandshakeInterceptor` URL token 鉴权、`WsPusher` 三主题推送、出价后广播 |
 | Day 14 | 反狙击延时 + 一口价 | 已完成 | 出价临近结束自动延时、`buy_now.lua` 一口价原子脚本、`/buy-now` 接口、成交状态广播 |
+| Day 15 | 压测与调优 | 已完成 | 100并发出价压测脚本、Tomcat/HikariCP/Lettuce调优、commons-pool2、压测报告 |
 
 ## 技术栈
 
@@ -454,6 +455,7 @@ Authorization: Bearer <token>
 | `817bfe1` | Day 12：出价校验链（责任链 + 模板方法） |
 | `a2f251c` | Day 13：WebSocket STOMP 实时推送（依赖、配置、拦截器、WsPusher、出价广播） |
 | `a76b7cf` | Day 14：反狙击延时 + 一口价（buy_now.lua、/buy-now、成交广播） |
+| `本次提交` | Day 15：100并发压测、Tomcat/HikariCP/Lettuce调优、压测报告 |
 
 ## WebSocket 使用说明
 
@@ -490,11 +492,11 @@ client.activate();
 
 ## 下一步
 
-继续 **Day 15：压测与调优**：
+继续 **Day 16：RabbitMQ 配置与消息队列**：
 
-- JMeter/脚本模拟 100 并发出价同一商品
-- 验证最高价正确性、失败原因分布、QPS 和 P99
-- 根据结果调优 Redis 连接池、Tomcat 线程池和业务日志级别
+- RabbitConfig：声明 Exchange/Queue/Binding
+- 持久化、Confirm、手动 ack
+- 队列与死信队列（延迟）
 
 ## README 维护约定
 
