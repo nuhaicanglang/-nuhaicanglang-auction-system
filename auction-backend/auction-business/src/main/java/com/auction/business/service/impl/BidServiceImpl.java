@@ -13,19 +13,21 @@ import com.auction.common.exception.BizException;
 import com.auction.framework.websocket.WsPusher;
 import com.auction.common.util.SnowflakeIdWorker;
 import com.auction.framework.redis.RedisKey;
+import com.auction.mq.constant.MqConstants;
+import com.auction.mq.message.BidMessage;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.rabbit.connection.CorrelationData;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.time.Instant;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.List;
 
 /**
@@ -51,6 +53,7 @@ public class BidServiceImpl implements BidService {
     private final BizBidMapper bidMapper;
     private final BidValidatorChain validatorChain;
     private final WsPusher wsPusher;
+    private final RabbitTemplate rabbitTemplate;
     private final SnowflakeIdWorker idWorker = new SnowflakeIdWorker();
 
     public BidServiceImpl(StringRedisTemplate redisTemplate,
@@ -59,7 +62,8 @@ public class BidServiceImpl implements BidService {
                           AuctionItemService auctionItemService,
                           BizBidMapper bidMapper,
                           BidValidatorChain validatorChain,
-                          WsPusher wsPusher) {
+                          WsPusher wsPusher,
+                          RabbitTemplate rabbitTemplate) {
         this.redisTemplate = redisTemplate;
         this.bidScript = bidScript;
         this.buyNowScript = buyNowScript;
@@ -67,6 +71,7 @@ public class BidServiceImpl implements BidService {
         this.bidMapper = bidMapper;
         this.validatorChain = validatorChain;
         this.wsPusher = wsPusher;
+        this.rabbitTemplate = rabbitTemplate;
     }
 
     @Override
@@ -122,26 +127,22 @@ public class BidServiceImpl implements BidService {
             throw new BizException(40003, "拍卖已成交，无法继续出价");
         }
 
-        // 3. 同步持久化到 MySQL（后续可改 MQ 异步）
-        BizBid bid = new BizBid();
-        bid.setId(bidId);
-        bid.setItemId(itemId);
-        bid.setBidderId(userId);
-        bid.setBidPrice(price);
-        bid.setBidTime(LocalDateTime.ofInstant(Instant.ofEpochMilli(bidTimeMs), ZoneId.systemDefault()));
-        bid.setBidType(1);
-        bid.setStatus(1);
-        bid.setClientIp(clientIp);
-        bid.setClientRequestId(requestId);
-        bid.setTenantId(0L);
-        bidMapper.insert(bid);
-
-        // 4. 更新商品冗余字段
-        auctionItemService.lambdaUpdate()
-                .eq(BizAuctionItem::getId, itemId)
-                .set(BizAuctionItem::getCurrentPrice, price)
-                .setSql("bid_count = bid_count + 1")
-                .update();
+        // 3. 异步持久化：发送 MQ 消息，由 BidPersistConsumer 落库
+        BidMessage bidMsg = BidMessage.builder()
+                .bidId(bidId)
+                .itemId(itemId)
+                .bidderId(userId)
+                .bidPrice(price)
+                .bidTimeMs(bidTimeMs)
+                .bidType(1)
+                .clientIp(clientIp)
+                .clientRequestId(requestId)
+                .build();
+        rabbitTemplate.convertAndSend(
+                MqConstants.EXCHANGE_DIRECT,
+                MqConstants.RK_BID_PERSIST,
+                bidMsg,
+                new CorrelationData(requestId));
 
         log.info("出价成功: itemId={}, userId={}, price={}, bidId={}", itemId, userId, price, bidId);
 
@@ -263,21 +264,24 @@ public class BidServiceImpl implements BidService {
             throw new BizException(40003, "拍卖已结束，无法一口价购买");
         }
 
-        // 3. MySQL 写出价记录（bid_type=3 表示一口价）
-        BizBid bid = new BizBid();
-        bid.setId(bidId);
-        bid.setItemId(itemId);
-        bid.setBidderId(userId);
-        bid.setBidPrice(buyNowPrice);
-        bid.setBidTime(LocalDateTime.ofInstant(Instant.ofEpochMilli(bidTimeMs), ZoneId.systemDefault()));
-        bid.setBidType(3);
-        bid.setStatus(1);
-        bid.setClientIp(clientIp);
-        bid.setClientRequestId(requestId);
-        bid.setTenantId(0L);
-        bidMapper.insert(bid);
+        // 3. 异步持久化出价记录
+        BidMessage bidMsg = BidMessage.builder()
+                .bidId(bidId)
+                .itemId(itemId)
+                .bidderId(userId)
+                .bidPrice(buyNowPrice)
+                .bidTimeMs(bidTimeMs)
+                .bidType(3)
+                .clientIp(clientIp)
+                .clientRequestId(requestId)
+                .build();
+        rabbitTemplate.convertAndSend(
+                MqConstants.EXCHANGE_DIRECT,
+                MqConstants.RK_BID_PERSIST,
+                bidMsg,
+                new CorrelationData(requestId));
 
-        // 4. 更新商品状态为已成交
+        // 4. 同步更新商品状态为已成交（一口价需立即生效）
         auctionItemService.lambdaUpdate()
                 .eq(BizAuctionItem::getId, itemId)
                 .set(BizAuctionItem::getStatus, 5)
@@ -285,7 +289,6 @@ public class BidServiceImpl implements BidService {
                 .set(BizAuctionItem::getWinnerId, userId)
                 .set(BizAuctionItem::getFinalPrice, buyNowPrice)
                 .set(BizAuctionItem::getActualEndTime, LocalDateTime.now())
-                .setSql("bid_count = bid_count + 1")
                 .update();
 
         log.info("一口价成交: itemId={}, winnerId={}, price={}, bidId={}", itemId, userId, buyNowPrice, bidId);

@@ -4,7 +4,7 @@
 
 ## 项目状态
 
-当前已完成到 **阶段 4 / Day 16：RabbitMQ 配置**。
+当前已完成到 **阶段 4 / Day 17：出价持久化消费者**。
 
 | 阶段 | 主题 | 状态 | 主要产出 |
 |---|---|---|---|
@@ -19,6 +19,7 @@
 | Day 14 | 反狙击延时 + 一口价 | 已完成 | 出价临近结束自动延时、`buy_now.lua` 一口价原子脚本、`/buy-now` 接口、成交状态广播 |
 | Day 15 | 压测与调优 | 已完成 | 100并发出价压测脚本、Tomcat/HikariCP/Lettuce调优、commons-pool2、压测报告 |
 | Day 16 | RabbitMQ 配置 | 已完成 | `RabbitConfig`（5队列+2交换机+DLX延迟）、Confirm回调、手动ack、Jackson序列化 |
+| Day 17 | 出价持久化消费者 | 已完成 | `BidPersistConsumer` MQ异步落库、`BidMessage` DTO、幂等去重、BidServiceImpl 同步→异步 |
 
 ## 技术栈
 
@@ -458,6 +459,7 @@ Authorization: Bearer <token>
 | `a76b7cf` | Day 14：反狙击延时 + 一口价（buy_now.lua、/buy-now、成交广播） |
 | `1790d29` | Day 15：100并发压测、Tomcat/HikariCP/Lettuce调优、压测报告 |
 | `50153cf` | Day 16：RabbitMQ 配置（Exchange/Queue/DLX/Confirm/手动ack） |
+| `本次提交` | Day 17：出价持久化消费者（BidPersistConsumer + BidMessage + 异步落库） |
 
 ## WebSocket 使用说明
 
@@ -494,11 +496,11 @@ client.activate();
 
 ## 下一步
 
-继续 **Day 17：出价持久化消费者**：
+继续 **Day 18：延迟队列（拍卖结算）**：
 
-- `BidPersistConsumer`：消费 Redis 出价队列(LPOP) + 写 MySQL
-- 幂等去重（client_request_id 唯一索引）
-- 累加 `bid_count`、`current_price`
+- 商品审核通过 → 投递 TTL 消息到 `auction.delay.queue`
+- 到期 → DLX → `AuctionSettleConsumer`
+- 结算逻辑：确定中标人、生成订单、广播状态变化
 
 ## README 维护约定
 
