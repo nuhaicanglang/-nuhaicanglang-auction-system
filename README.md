@@ -453,7 +453,7 @@ Authorization: Bearer <token>
 | `cde7a75` | Day 10~11：Redis Lua 原子出价、BidService、BidController、Redis 预热 |
 | `817bfe1` | Day 12：出价校验链（责任链 + 模板方法） |
 | `a2f251c` | Day 13：WebSocket STOMP 实时推送（依赖、配置、拦截器、WsPusher、出价广播） |
-| `本次提交` | Day 14：反狙击延时 + 一口价（buy_now.lua、/buy-now、成交广播） |
+| `a76b7cf` | Day 14：反狙击延时 + 一口价（buy_now.lua、/buy-now、成交广播） |
 
 ## WebSocket 使用说明
 
