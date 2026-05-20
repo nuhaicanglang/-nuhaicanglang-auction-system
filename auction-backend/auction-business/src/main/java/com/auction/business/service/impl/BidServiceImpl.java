@@ -14,6 +14,7 @@ import com.auction.framework.websocket.WsPusher;
 import com.auction.common.util.SnowflakeIdWorker;
 import com.auction.framework.redis.RedisKey;
 import com.auction.mq.constant.MqConstants;
+import com.auction.mq.message.AuctionSettleMessage;
 import com.auction.mq.message.BidMessage;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
@@ -171,6 +172,20 @@ public class BidServiceImpl implements BidService {
                 // 广播状态变化（仍为拍卖中，但 endTime 变了）
                 wsPusher.pushAuctionStateChange(itemId, 3,
                         "反狙击延时，新结束时间：" + newEnd);
+                // 重新投递延迟结算消息（旧消息会被 AuctionSettleConsumer 的时间校验跳过）
+                long ttlMs = java.time.Duration.between(LocalDateTime.now(), newEnd).toMillis();
+                if (ttlMs < 1000) ttlMs = 1000;
+                AuctionSettleMessage settleMsg = AuctionSettleMessage.builder()
+                        .itemId(itemId)
+                        .expectedEndTimeMs(newEnd.atZone(java.time.ZoneId.systemDefault())
+                                .toInstant().toEpochMilli())
+                        .build();
+                String exp = String.valueOf(ttlMs);
+                rabbitTemplate.convertAndSend(
+                        MqConstants.EXCHANGE_DIRECT,
+                        MqConstants.RK_AUCTION_DELAY,
+                        settleMsg,
+                        m -> { m.getMessageProperties().setExpiration(exp); return m; });
             }
         }
 

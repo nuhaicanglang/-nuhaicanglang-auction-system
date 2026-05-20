@@ -4,7 +4,7 @@
 
 ## 项目状态
 
-当前已完成到 **阶段 4 / Day 17：出价持久化消费者**。
+当前已完成到 **阶段 4 / Day 18：延迟队列（拍卖结算）**。
 
 | 阶段 | 主题 | 状态 | 主要产出 |
 |---|---|---|---|
@@ -20,6 +20,7 @@
 | Day 15 | 压测与调优 | 已完成 | 100并发出价压测脚本、Tomcat/HikariCP/Lettuce调优、commons-pool2、压测报告 |
 | Day 16 | RabbitMQ 配置 | 已完成 | `RabbitConfig`（5队列+2交换机+DLX延迟）、Confirm回调、手动ack、Jackson序列化 |
 | Day 17 | 出价持久化消费者 | 已完成 | `BidPersistConsumer` MQ异步落库、`BidMessage` DTO、幂等去重、BidServiceImpl 同步→异步 |
+| Day 18 | 延迟队列（拍卖结算） | 已完成 | `AuctionSettleConsumer` DLX结算、审核通过投递TTL消息、反狙击重投延迟消息、流拍处理 |
 
 ## 技术栈
 
@@ -460,6 +461,7 @@ Authorization: Bearer <token>
 | `1790d29` | Day 15：100并发压测、Tomcat/HikariCP/Lettuce调优、压测报告 |
 | `50153cf` | Day 16：RabbitMQ 配置（Exchange/Queue/DLX/Confirm/手动ack） |
 | `e6d38e4` | Day 17：出价持久化消费者（BidPersistConsumer + BidMessage + 异步落库） |
+| `本次提交` | Day 18：延迟队列拍卖结算（AuctionSettleConsumer + TTL延迟 + 反狙击重投） |
 
 ## WebSocket 使用说明
 
@@ -496,11 +498,11 @@ client.activate();
 
 ## 下一步
 
-继续 **Day 18：延迟队列（拍卖结算）**：
+继续 **Day 19：通知体系**：
 
-- 商品审核通过 → 投递 TTL 消息到 `auction.delay.queue`
-- 到期 → DLX → `AuctionSettleConsumer`
-- 结算逻辑：确定中标人、生成订单、广播状态变化
+- `NotifyService` + 策略模式（站内信/邮件）
+- `BidOutbidConsumer`：被超价时发站内信
+- `AuctionWonConsumer`：中标通知 + 站内信表
 
 ## README 维护约定
 
