@@ -457,7 +457,7 @@ Authorization: Bearer <token>
 | `a2f251c` | Day 13：WebSocket STOMP 实时推送（依赖、配置、拦截器、WsPusher、出价广播） |
 | `a76b7cf` | Day 14：反狙击延时 + 一口价（buy_now.lua、/buy-now、成交广播） |
 | `1790d29` | Day 15：100并发压测、Tomcat/HikariCP/Lettuce调优、压测报告 |
-| `本次提交` | Day 16：RabbitMQ 配置（Exchange/Queue/DLX/Confirm/手动ack） |
+| `50153cf` | Day 16：RabbitMQ 配置（Exchange/Queue/DLX/Confirm/手动ack） |
 
 ## WebSocket 使用说明
 
