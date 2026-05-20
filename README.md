@@ -4,7 +4,7 @@
 
 ## 项目状态
 
-当前已完成到 **阶段 3 / Day 15：压测与调优**。
+当前已完成到 **阶段 4 / Day 16：RabbitMQ 配置**。
 
 | 阶段 | 主题 | 状态 | 主要产出 |
 |---|---|---|---|
@@ -18,6 +18,7 @@
 | Day 13 | WebSocket 实时推送 | 已完成 | `WebSocketConfig` STOMP/SockJS、`JwtHandshakeInterceptor` URL token 鉴权、`WsPusher` 三主题推送、出价后广播 |
 | Day 14 | 反狙击延时 + 一口价 | 已完成 | 出价临近结束自动延时、`buy_now.lua` 一口价原子脚本、`/buy-now` 接口、成交状态广播 |
 | Day 15 | 压测与调优 | 已完成 | 100并发出价压测脚本、Tomcat/HikariCP/Lettuce调优、commons-pool2、压测报告 |
+| Day 16 | RabbitMQ 配置 | 已完成 | `RabbitConfig`（5队列+2交换机+DLX延迟）、Confirm回调、手动ack、Jackson序列化 |
 
 ## 技术栈
 
@@ -456,6 +457,7 @@ Authorization: Bearer <token>
 | `a2f251c` | Day 13：WebSocket STOMP 实时推送（依赖、配置、拦截器、WsPusher、出价广播） |
 | `a76b7cf` | Day 14：反狙击延时 + 一口价（buy_now.lua、/buy-now、成交广播） |
 | `1790d29` | Day 15：100并发压测、Tomcat/HikariCP/Lettuce调优、压测报告 |
+| `本次提交` | Day 16：RabbitMQ 配置（Exchange/Queue/DLX/Confirm/手动ack） |
 
 ## WebSocket 使用说明
 
@@ -492,11 +494,11 @@ client.activate();
 
 ## 下一步
 
-继续 **Day 16：RabbitMQ 配置与消息队列**：
+继续 **Day 17：出价持久化消费者**：
 
-- RabbitConfig：声明 Exchange/Queue/Binding
-- 持久化、Confirm、手动 ack
-- 队列与死信队列（延迟）
+- `BidPersistConsumer`：消费 Redis 出价队列(LPOP) + 写 MySQL
+- 幂等去重（client_request_id 唯一索引）
+- 累加 `bid_count`、`current_price`
 
 ## README 维护约定
 

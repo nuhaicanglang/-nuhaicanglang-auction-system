@@ -32,6 +32,21 @@ spring:
     port: 5672
     username: admin
     password: admin123
+    # 发布确认：correlated 模式，异步回调确认每条消息是否到达交换机
+    publisher-confirm-type: correlated
+    # 消息无法路由到队列时回退给发送方
+    publisher-returns: true
+    listener:
+      simple:
+        # 手动 ack：消费者处理完毕后显式确认，避免消息丢失
+        acknowledge-mode: manual
+        # 每次只拉取 1 条消息，处理完再拉下一条（防止消费者积压）
+        prefetch: 1
+        # 消费失败重试
+        retry:
+          enabled: true
+          max-attempts: 3
+          initial-interval: 1000ms
   elasticsearch:
     uris: http://localhost:9200
 
