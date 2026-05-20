@@ -62,7 +62,7 @@ public class WsPusher {
      * 拍卖状态变化广播（开拍、流拍、成交等）。
      *
      * @param itemId    商品ID
-     * @param newStatus 新状态码（3=拍卖中，4=成交，5=流拍，7=下架）
+     * @param newStatus 新状态码（3=拍卖中，4=已结，5=已成交，6=流拍，7=下架）
      * @param message   可读描述
      */
     public void pushAuctionStateChange(Long itemId, int newStatus, String message) {

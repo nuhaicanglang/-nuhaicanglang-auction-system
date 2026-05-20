@@ -16,8 +16,8 @@ import com.auction.framework.redis.RedisKey;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Service;
@@ -31,29 +31,43 @@ import java.util.List;
 /**
  * 出价服务实现。
  * <p>
- * 核心流程：
- * 1. 校验商品状态（必须为「拍卖中」status=3）
- * 2. 校验不能给自己的商品出价
- * 3. 调用 Redis Lua 脚本原子出价（bid.lua）
- *    - 返回  1：成功
- *    - 返回  0：出价金额不足
- *    - 返回 -1：重复请求（幂等拦截）
- * 4. 成功后同步写入 MySQL（后续改为 MQ 异步持久化）
- * 5. 更新商品冗余字段（current_price, bid_count）
+ * 核心流程（普通出价）：
+ * 1. 责任链校验（参数/状态/自我出价/频率/价格）
+ * 2. Lua 原子出价（bid.lua）
+ * 3. 持久化 MySQL + 更新商品冗余字段
+ * 4. 反狙击：若剩余时间 < anti_snipe_min 则延长 end_time
+ * 5. 一口价触达：若出价 >= buy_now_price 则直接成交
+ * 6. WebSocket 广播
  * </p>
  */
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class BidServiceImpl implements BidService {
 
     private final StringRedisTemplate redisTemplate;
     private final DefaultRedisScript<Long> bidScript;
+    private final DefaultRedisScript<Long> buyNowScript;
     private final AuctionItemService auctionItemService;
     private final BizBidMapper bidMapper;
     private final BidValidatorChain validatorChain;
     private final WsPusher wsPusher;
     private final SnowflakeIdWorker idWorker = new SnowflakeIdWorker();
+
+    public BidServiceImpl(StringRedisTemplate redisTemplate,
+                          @Qualifier("bidScript") DefaultRedisScript<Long> bidScript,
+                          @Qualifier("buyNowScript") DefaultRedisScript<Long> buyNowScript,
+                          AuctionItemService auctionItemService,
+                          BizBidMapper bidMapper,
+                          BidValidatorChain validatorChain,
+                          WsPusher wsPusher) {
+        this.redisTemplate = redisTemplate;
+        this.bidScript = bidScript;
+        this.buyNowScript = buyNowScript;
+        this.auctionItemService = auctionItemService;
+        this.bidMapper = bidMapper;
+        this.validatorChain = validatorChain;
+        this.wsPusher = wsPusher;
+    }
 
     @Override
     public BidResultVO placeBid(Long itemId, Long userId, BigDecimal price,
@@ -78,14 +92,17 @@ public class BidServiceImpl implements BidService {
                 List.of(
                         RedisKey.itemPrice(itemId),
                         RedisKey.bidQueue(itemId),
-                        RedisKey.idem(requestId)
+                        RedisKey.idem(requestId),
+                        RedisKey.itemStatus(itemId)
                 ),
                 String.valueOf(userId),
                 price.toPlainString(),
                 String.valueOf(bidTimeMs),
                 item.getBidIncrement().toPlainString(),
                 String.valueOf(bidId),
-                requestId
+                requestId,
+                item.getBuyNowPrice() != null ? item.getBuyNowPrice().toPlainString() : "",
+                "5"
         );
 
         if (result == null) {
@@ -100,6 +117,9 @@ public class BidServiceImpl implements BidService {
         }
         if (result == -1) {
             throw new BizException(40004, "重复请求，请勿重复提交");
+        }
+        if (result == -2) {
+            throw new BizException(40003, "拍卖已成交，无法继续出价");
         }
 
         // 3. 同步持久化到 MySQL（后续可改 MQ 异步）
@@ -125,13 +145,55 @@ public class BidServiceImpl implements BidService {
 
         log.info("出价成功: itemId={}, userId={}, price={}, bidId={}", itemId, userId, price, bidId);
 
-        // 5. WebSocket 实时推送：将出价结果广播给所有订阅该商品的客户端
-        //    bidderName 此处使用简单脱敏，后续可优化为查 nickname
+        // 4. 反狙击：若开启且剩余时间 < anti_snipe_min，延长 end_time
+        BidResultVO vo = new BidResultVO();
+        vo.setBidId(bidId);
+        vo.setCurrentPrice(price);
+        vo.setDeal(false);
+        vo.setExtended(false);
+        vo.setStatus(3);
+
+        if (result != 2 && item.getIsAntiSnipe() != null && item.getIsAntiSnipe() == 1
+                && item.getEndTime() != null && item.getAntiSnipeMin() != null) {
+            long remainSec = java.time.Duration.between(LocalDateTime.now(), item.getEndTime()).getSeconds();
+            if (remainSec > 0 && remainSec < item.getAntiSnipeMin() * 60L) {
+                // 延长：将结束时间推迟到 now + anti_snipe_min
+                LocalDateTime newEnd = LocalDateTime.now().plusMinutes(item.getAntiSnipeMin());
+                auctionItemService.lambdaUpdate()
+                        .eq(BizAuctionItem::getId, itemId)
+                        .set(BizAuctionItem::getEndTime, newEnd)
+                        .set(BizAuctionItem::getActualEndTime, newEnd)
+                        .update();
+                vo.setExtended(true);
+                vo.setEndTime(newEnd);
+                log.info("反狙击延时: itemId={}, newEnd={}", itemId, newEnd);
+                // 广播状态变化（仍为拍卖中，但 endTime 变了）
+                wsPusher.pushAuctionStateChange(itemId, 3,
+                        "反狙击延时，新结束时间：" + newEnd);
+            }
+        }
+
+        // 5. 一口价触达：出价 >= buy_now_price → 直接成交
+        if (result == 2) {
+            auctionItemService.lambdaUpdate()
+                    .eq(BizAuctionItem::getId, itemId)
+                    .set(BizAuctionItem::getStatus, 5)   // 5=已成交
+                    .set(BizAuctionItem::getWinnerId, userId)
+                    .set(BizAuctionItem::getFinalPrice, price)
+                    .set(BizAuctionItem::getActualEndTime, LocalDateTime.now())
+                    .update();
+            vo.setDeal(true);
+            vo.setStatus(5);
+            log.info("一口价触达成交: itemId={}, winnerId={}, price={}", itemId, userId, price);
+            wsPusher.pushAuctionStateChange(itemId, 5, "一口价成交，成交价：" + price.toPlainString());
+        }
+
+        // 6. WebSocket 出价广播
         String idStr = String.valueOf(userId);
         String bidderName = idStr.charAt(0) + "***" + idStr.charAt(idStr.length() - 1);
         wsPusher.pushBidPlaced(itemId, userId, bidderName, price, bidId);
 
-        return new BidResultVO(bidId, price);
+        return vo;
     }
 
     @Override
@@ -142,6 +204,105 @@ public class BidServiceImpl implements BidService {
                 .orderByDesc(BizBid::getBidTime);
         Page<BizBid> result = bidMapper.selectPage(p, wrapper);
         return result.convert(this::toVO);
+    }
+
+    // ----------------------------------------------------------------
+    // 一口价
+    // ----------------------------------------------------------------
+
+    @Override
+    public BidResultVO buyNow(Long itemId, Long userId, String requestId, String clientIp) {
+        // 1. 加载商品，基础校验
+        BizAuctionItem item = auctionItemService.getById(itemId);
+        if (item == null) {
+            throw new BizException(30003, "商品不存在");
+        }
+        if (item.getStatus() == null || item.getStatus() != 3) {
+            throw new BizException(40003, "拍卖未开始或已结束");
+        }
+        if (item.getSellerId().equals(userId)) {
+            throw new BizException(40002, "不能购买自己的商品");
+        }
+        if (item.getBuyNowPrice() == null) {
+            throw new BizException(40006, "该商品未设置一口价");
+        }
+        LocalDateTime now = LocalDateTime.now();
+        if (item.getEndTime() != null && now.isAfter(item.getEndTime())) {
+            throw new BizException(40003, "拍卖已结束");
+        }
+
+        BigDecimal buyNowPrice = item.getBuyNowPrice();
+        long bidId = idWorker.nextId();
+        long bidTimeMs = System.currentTimeMillis();
+
+        // 2. 执行 buy_now Lua 脚本：原子写价格 + Redis 状态 key + 幂等
+        //    KEYS: [price, queue, idem, status]
+        //    ARGV: [userId, buyNowPrice, bidTimeMs, bidId, requestId, statusValue("5")]
+        Long result = redisTemplate.execute(buyNowScript,
+                List.of(
+                        RedisKey.itemPrice(itemId),
+                        RedisKey.bidQueue(itemId),
+                        RedisKey.idem(requestId),
+                        RedisKey.itemStatus(itemId)
+                ),
+                String.valueOf(userId),
+                buyNowPrice.toPlainString(),
+                String.valueOf(bidTimeMs),
+                String.valueOf(bidId),
+                requestId,
+                "5"
+        );
+
+        if (result == null) {
+            throw new BizException(99999, "一口价脚本执行异常");
+        }
+        if (result == -1) {
+            throw new BizException(40004, "重复请求，请勿重复提交");
+        }
+        if (result == 0) {
+            throw new BizException(40003, "拍卖已结束，无法一口价购买");
+        }
+
+        // 3. MySQL 写出价记录（bid_type=3 表示一口价）
+        BizBid bid = new BizBid();
+        bid.setId(bidId);
+        bid.setItemId(itemId);
+        bid.setBidderId(userId);
+        bid.setBidPrice(buyNowPrice);
+        bid.setBidTime(LocalDateTime.ofInstant(Instant.ofEpochMilli(bidTimeMs), ZoneId.systemDefault()));
+        bid.setBidType(3);
+        bid.setStatus(1);
+        bid.setClientIp(clientIp);
+        bid.setClientRequestId(requestId);
+        bid.setTenantId(0L);
+        bidMapper.insert(bid);
+
+        // 4. 更新商品状态为已成交
+        auctionItemService.lambdaUpdate()
+                .eq(BizAuctionItem::getId, itemId)
+                .set(BizAuctionItem::getStatus, 5)
+                .set(BizAuctionItem::getCurrentPrice, buyNowPrice)
+                .set(BizAuctionItem::getWinnerId, userId)
+                .set(BizAuctionItem::getFinalPrice, buyNowPrice)
+                .set(BizAuctionItem::getActualEndTime, LocalDateTime.now())
+                .setSql("bid_count = bid_count + 1")
+                .update();
+
+        log.info("一口价成交: itemId={}, winnerId={}, price={}, bidId={}", itemId, userId, buyNowPrice, bidId);
+
+        // 5. WebSocket 广播
+        String idStr = String.valueOf(userId);
+        String bidderName = idStr.charAt(0) + "***" + idStr.charAt(idStr.length() - 1);
+        wsPusher.pushBidPlaced(itemId, userId, bidderName, buyNowPrice, bidId);
+        wsPusher.pushAuctionStateChange(itemId, 5, "一口价成交，成交价：" + buyNowPrice.toPlainString());
+
+        BidResultVO vo = new BidResultVO();
+        vo.setBidId(bidId);
+        vo.setCurrentPrice(buyNowPrice);
+        vo.setDeal(true);
+        vo.setExtended(false);
+        vo.setStatus(5);
+        return vo;
     }
 
     private BidVO toVO(BizBid bid) {

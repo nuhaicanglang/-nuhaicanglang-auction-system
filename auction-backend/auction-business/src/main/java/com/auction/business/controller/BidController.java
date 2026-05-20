@@ -48,6 +48,26 @@ public class BidController {
     }
 
     /**
+     * 一口价成交。
+     * 按商品设置的 buy_now_price 直接成交，不需要请求体。
+     * Header X-Idempotent-Key 幂等ID（未传则服务端生成）。
+     */
+    @PostMapping("/buy-now")
+    public Result<BidResultVO> buyNow(@PathVariable Long itemId,
+                                      HttpServletRequest request) {
+        LoginUser user = SecurityUtils.getLoginUser();
+
+        String requestId = request.getHeader("X-Idempotent-Key");
+        if (requestId == null || requestId.isBlank()) {
+            requestId = UUID.randomUUID().toString();
+        }
+
+        String clientIp = request.getRemoteAddr();
+        BidResultVO result = bidService.buyNow(itemId, user.getUserId(), requestId, clientIp);
+        return Result.success(result);
+    }
+
+    /**
      * 查询商品的出价记录（公开，按时间倒序）。
      */
     @GetMapping

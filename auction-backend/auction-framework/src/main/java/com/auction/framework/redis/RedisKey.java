@@ -13,6 +13,11 @@ public final class RedisKey {
         return "auction:price:" + itemId;
     }
 
+    /** 商品当前状态：auction:status:{itemId} */
+    public static String itemStatus(Long itemId) {
+        return "auction:status:" + itemId;
+    }
+
     /** 出价队列（Lua 脚本 LPUSH）：auction:bid:queue:{itemId} */
     public static String bidQueue(Long itemId) {
         return "auction:bid:queue:" + itemId;

@@ -4,7 +4,7 @@
 
 ## 项目状态
 
-当前已完成到 **阶段 3 / Day 13：WebSocket 实时推送**。
+当前已完成到 **阶段 3 / Day 14：反狙击延时 + 一口价**。
 
 | 阶段 | 主题 | 状态 | 主要产出 |
 |---|---|---|---|
@@ -16,6 +16,7 @@
 | Day 11 | 出价主流程 | 已完成 | `BidController`、`BidServiceImpl`、Redis Lua 原子出价、出价记录 |
 | Day 12 | 出价校验链 | 已完成 | 责任链 + 模板方法：参数、商品状态、不能给自己出价、频率、价格校验 |
 | Day 13 | WebSocket 实时推送 | 已完成 | `WebSocketConfig` STOMP/SockJS、`JwtHandshakeInterceptor` URL token 鉴权、`WsPusher` 三主题推送、出价后广播 |
+| Day 14 | 反狙击延时 + 一口价 | 已完成 | 出价临近结束自动延时、`buy_now.lua` 一口价原子脚本、`/buy-now` 接口、成交状态广播 |
 
 ## 技术栈
 
@@ -70,6 +71,9 @@
 - **出价记录**：成功出价写入 `biz_bid`，可查询商品出价记录。
 - **出价校验链**：责任链 + 模板方法实现参数、状态、身份、频率、价格校验。
 - **频率限制**：同一用户同一商品 1 秒内只能出价一次。
+- **WebSocket 推送**：出价成功后广播 `/topic/auction/{itemId}`，状态变化广播 `/topic/auction/{itemId}/state`。
+- **反狙击延时**：拍卖临近结束时出价，自动延长 `end_time` 并推送状态变化。
+- **一口价成交**：支持 `POST /api/items/{itemId}/bids/buy-now`，直接以 `buy_now_price` 成交并写入状态 `5=已成交`。
 
 ## 目录结构
 
@@ -449,6 +453,7 @@ Authorization: Bearer <token>
 | `cde7a75` | Day 10~11：Redis Lua 原子出价、BidService、BidController、Redis 预热 |
 | `817bfe1` | Day 12：出价校验链（责任链 + 模板方法） |
 | `a2f251c` | Day 13：WebSocket STOMP 实时推送（依赖、配置、拦截器、WsPusher、出价广播） |
+| `本次提交` | Day 14：反狙击延时 + 一口价（buy_now.lua、/buy-now、成交广播） |
 
 ## WebSocket 使用说明
 
@@ -465,7 +470,7 @@ ws://localhost:8080/api/ws?token=<jwt_access_token>
 | 主题 | 触发时机 | 消息示例 |
 |---|---|---|
 | `/topic/auction/{itemId}` | 每次出价成功 | `{"type":"BID_PLACED","currentPrice":120,...}` |
-| `/topic/auction/{itemId}/state` | 状态变化（开拍/流拍/成交） | `{"type":"STATE_CHANGE","newStatus":4,...}` |
+| `/topic/auction/{itemId}/state` | 状态变化（开拍/流拍/成交） | `{"type":"STATE_CHANGE","newStatus":5,...}` |
 | `/user/queue/notification` | 个人通知（被超价等） | `{"type":"NOTIFICATION","title":"..."}` |
 
 ### 前端接入示例（stompjs）
@@ -485,11 +490,11 @@ client.activate();
 
 ## 下一步
 
-继续 **Day 14：反狙击延时 + 一口价**：
+继续 **Day 15：压测与调优**：
 
-- 出价时间接近结束时自动延长拍卖（反狙击）
-- 一口价逻辑：出价 ≥ `buy_now_price` 直接成交
-- 状态流转事件通过 `WsPusher.pushAuctionStateChange` 广播
+- JMeter/脚本模拟 100 并发出价同一商品
+- 验证最高价正确性、失败原因分布、QPS 和 P99
+- 根据结果调优 Redis 连接池、Tomcat 线程池和业务日志级别
 
 ## README 维护约定
 

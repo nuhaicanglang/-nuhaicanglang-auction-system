@@ -21,4 +21,13 @@ public class BidScriptConfig {
         script.setResultType(Long.class);
         return script;
     }
+
+    /** 一口价 Lua 脚本：原子写价格 + 状态 + 入队 */
+    @Bean
+    public DefaultRedisScript<Long> buyNowScript() {
+        DefaultRedisScript<Long> script = new DefaultRedisScript<>();
+        script.setScriptSource(new ResourceScriptSource(new ClassPathResource("scripts/buy_now.lua")));
+        script.setResultType(Long.class);
+        return script;
+    }
 }
