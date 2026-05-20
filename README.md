@@ -459,7 +459,7 @@ Authorization: Bearer <token>
 | `a76b7cf` | Day 14：反狙击延时 + 一口价（buy_now.lua、/buy-now、成交广播） |
 | `1790d29` | Day 15：100并发压测、Tomcat/HikariCP/Lettuce调优、压测报告 |
 | `50153cf` | Day 16：RabbitMQ 配置（Exchange/Queue/DLX/Confirm/手动ack） |
-| `本次提交` | Day 17：出价持久化消费者（BidPersistConsumer + BidMessage + 异步落库） |
+| `e6d38e4` | Day 17：出价持久化消费者（BidPersistConsumer + BidMessage + 异步落库） |
 
 ## WebSocket 使用说明
 
