@@ -463,7 +463,7 @@ Authorization: Bearer <token>
 | `50153cf` | Day 16：RabbitMQ 配置（Exchange/Queue/DLX/Confirm/手动ack） |
 | `e6d38e4` | Day 17：出价持久化消费者（BidPersistConsumer + BidMessage + 异步落库） |
 | `ab13dfc` | Day 18：延迟队列拍卖结算（AuctionSettleConsumer + TTL延迟 + 反狙击重投） |
-| `本次提交` | Day 19：通知体系（站内信 + 被超价通知 + 中标通知 + WS个人通知） |
+| `f17c870` | Day 19：通知体系（站内信 + 被超价通知 + 中标通知 + WS个人通知） |
 
 ## WebSocket 使用说明
 
