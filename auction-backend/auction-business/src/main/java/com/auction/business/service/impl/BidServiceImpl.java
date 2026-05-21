@@ -15,6 +15,7 @@ import com.auction.common.util.SnowflakeIdWorker;
 import com.auction.framework.redis.RedisKey;
 import com.auction.mq.constant.MqConstants;
 import com.auction.mq.message.AuctionSettleMessage;
+import com.auction.mq.message.AuctionWonMessage;
 import com.auction.mq.message.BidMessage;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
@@ -202,6 +203,17 @@ public class BidServiceImpl implements BidService {
             vo.setStatus(5);
             log.info("一口价触达成交: itemId={}, winnerId={}, price={}", itemId, userId, price);
             wsPusher.pushAuctionStateChange(itemId, 5, "一口价成交，成交价：" + price.toPlainString());
+            AuctionWonMessage wonMsg = AuctionWonMessage.builder()
+                    .itemId(itemId)
+                    .itemTitle(item.getTitle())
+                    .winnerId(userId)
+                    .finalPrice(price)
+                    .bidId(bidId)
+                    .build();
+            rabbitTemplate.convertAndSend(
+                    MqConstants.EXCHANGE_DIRECT,
+                    MqConstants.RK_AUCTION_WON,
+                    wonMsg);
         }
 
         // 6. WebSocket 出价广播
@@ -313,6 +325,17 @@ public class BidServiceImpl implements BidService {
         String bidderName = idStr.charAt(0) + "***" + idStr.charAt(idStr.length() - 1);
         wsPusher.pushBidPlaced(itemId, userId, bidderName, buyNowPrice, bidId);
         wsPusher.pushAuctionStateChange(itemId, 5, "一口价成交，成交价：" + buyNowPrice.toPlainString());
+        AuctionWonMessage wonMsg = AuctionWonMessage.builder()
+                .itemId(itemId)
+                .itemTitle(item.getTitle())
+                .winnerId(userId)
+                .finalPrice(buyNowPrice)
+                .bidId(bidId)
+                .build();
+        rabbitTemplate.convertAndSend(
+                MqConstants.EXCHANGE_DIRECT,
+                MqConstants.RK_AUCTION_WON,
+                wonMsg);
 
         BidResultVO vo = new BidResultVO();
         vo.setBidId(bidId);

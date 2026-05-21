@@ -5,10 +5,13 @@ import com.auction.business.entity.BizBid;
 import com.auction.business.mapper.BizBidMapper;
 import com.auction.business.service.AuctionItemService;
 import com.auction.mq.constant.MqConstants;
+import com.auction.mq.message.BidOutbidMessage;
 import com.auction.mq.message.BidMessage;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.rabbitmq.client.Channel;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.support.AmqpHeaders;
 import org.springframework.dao.DuplicateKeyException;
@@ -39,6 +42,7 @@ public class BidPersistConsumer {
 
     private final BizBidMapper bidMapper;
     private final AuctionItemService auctionItemService;
+    private final RabbitTemplate rabbitTemplate;
 
     @RabbitListener(queues = MqConstants.QUEUE_BID_PERSIST)
     public void onMessage(BidMessage msg, Channel channel,
@@ -46,6 +50,14 @@ public class BidPersistConsumer {
         try {
             log.debug("收到出价消息: bidId={}, itemId={}, price={}",
                     msg.getBidId(), msg.getItemId(), msg.getBidPrice());
+
+            BizBid previousTopBid = bidMapper.selectOne(
+                    new LambdaQueryWrapper<BizBid>()
+                            .eq(BizBid::getItemId, msg.getItemId())
+                            .eq(BizBid::getStatus, 1)
+                            .ne(BizBid::getBidderId, msg.getBidderId())
+                            .orderByDesc(BizBid::getBidPrice)
+                            .last("LIMIT 1"));
 
             // 1. 插入 biz_bid（幂等：client_request_id 唯一索引）
             BizBid bid = new BizBid();
@@ -76,6 +88,23 @@ public class BidPersistConsumer {
                     .set(BizAuctionItem::getCurrentPrice, msg.getBidPrice())
                     .setSql("bid_count = bid_count + 1")
                     .update();
+
+            if (previousTopBid != null && msg.getBidPrice().compareTo(previousTopBid.getBidPrice()) > 0) {
+                BizAuctionItem item = auctionItemService.getById(msg.getItemId());
+                BidOutbidMessage outbidMsg = BidOutbidMessage.builder()
+                        .itemId(msg.getItemId())
+                        .itemTitle(item != null ? item.getTitle() : String.valueOf(msg.getItemId()))
+                        .outbidUserId(previousTopBid.getBidderId())
+                        .newBidderId(msg.getBidderId())
+                        .oldPrice(previousTopBid.getBidPrice())
+                        .newPrice(msg.getBidPrice())
+                        .bidId(msg.getBidId())
+                        .build();
+                rabbitTemplate.convertAndSend(
+                        MqConstants.EXCHANGE_DIRECT,
+                        MqConstants.RK_BID_OUTBID,
+                        outbidMsg);
+            }
 
             log.info("出价落库成功: bidId={}, itemId={}, price={}",
                     msg.getBidId(), msg.getItemId(), msg.getBidPrice());

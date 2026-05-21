@@ -314,3 +314,18 @@ CREATE TABLE IF NOT EXISTS `biz_bid` (
     KEY `idx_item_price`          (`item_id`, `bid_price` DESC),
     KEY `idx_bidder`              (`bidder_id`, `created_at` DESC)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='出价记录';
+
+CREATE TABLE IF NOT EXISTS `biz_notification` (
+    `id`              BIGINT UNSIGNED NOT NULL,
+    `user_id`         BIGINT UNSIGNED NOT NULL,
+    `type`            TINYINT UNSIGNED NOT NULL COMMENT '1被超价/2中标',
+    `title`           VARCHAR(100)    NOT NULL,
+    `content`         VARCHAR(500)    NOT NULL,
+    `related_item_id` BIGINT UNSIGNED DEFAULT NULL,
+    `is_read`         TINYINT UNSIGNED NOT NULL DEFAULT 0 COMMENT '0未读/1已读',
+    `read_at`         DATETIME        DEFAULT NULL,
+    `created_at`      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    KEY `idx_user_read_created` (`user_id`, `is_read`, `created_at` DESC),
+    KEY `idx_related_item` (`related_item_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='站内信通知';

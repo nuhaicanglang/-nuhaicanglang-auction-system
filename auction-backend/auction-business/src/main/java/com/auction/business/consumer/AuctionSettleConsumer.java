@@ -8,10 +8,12 @@ import com.auction.framework.redis.RedisKey;
 import com.auction.framework.websocket.WsPusher;
 import com.auction.mq.constant.MqConstants;
 import com.auction.mq.message.AuctionSettleMessage;
+import com.auction.mq.message.AuctionWonMessage;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.rabbitmq.client.Channel;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.support.AmqpHeaders;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -40,6 +42,7 @@ public class AuctionSettleConsumer {
     private final BizBidMapper bidMapper;
     private final WsPusher wsPusher;
     private final StringRedisTemplate redisTemplate;
+    private final RabbitTemplate rabbitTemplate;
 
     @RabbitListener(queues = MqConstants.QUEUE_AUCTION_SETTLE)
     public void onMessage(AuctionSettleMessage msg, Channel channel,
@@ -102,6 +105,17 @@ public class AuctionSettleConsumer {
                         itemId, topBid.getBidderId(), topBid.getBidPrice());
                 wsPusher.pushAuctionStateChange(itemId, 5,
                         "拍卖结束，成交价：" + topBid.getBidPrice().toPlainString());
+                AuctionWonMessage wonMsg = AuctionWonMessage.builder()
+                        .itemId(itemId)
+                        .itemTitle(item.getTitle())
+                        .winnerId(topBid.getBidderId())
+                        .finalPrice(topBid.getBidPrice())
+                        .bidId(topBid.getId())
+                        .build();
+                rabbitTemplate.convertAndSend(
+                        MqConstants.EXCHANGE_DIRECT,
+                        MqConstants.RK_AUCTION_WON,
+                        wonMsg);
             } else {
                 // 5b. 无出价 → 流拍
                 auctionItemService.lambdaUpdate()
