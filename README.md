@@ -465,7 +465,7 @@ Authorization: Bearer <token>
 | `e6d38e4` | Day 17：出价持久化消费者（BidPersistConsumer + BidMessage + 异步落库） |
 | `ab13dfc` | Day 18：延迟队列拍卖结算（AuctionSettleConsumer + TTL延迟 + 反狙击重投） |
 | `f17c870` | Day 19：通知体系（站内信 + 被超价通知 + 中标通知 + WS个人通知） |
-| `本次提交` | Day 20：订单创建与查询（成交生成待支付订单 + 买家/卖家查询） |
+| `81be310` | Day 20：订单创建与查询（成交生成待支付订单 + 买家/卖家查询） |
 
 ## WebSocket 使用说明
 
