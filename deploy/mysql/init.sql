@@ -315,6 +315,36 @@ CREATE TABLE IF NOT EXISTS `biz_bid` (
     KEY `idx_bidder`              (`bidder_id`, `created_at` DESC)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='出价记录';
 
+CREATE TABLE IF NOT EXISTS `biz_order` (
+    `id`                BIGINT UNSIGNED NOT NULL,
+    `order_no`          VARCHAR(40)     NOT NULL,
+    `item_id`           BIGINT UNSIGNED NOT NULL,
+    `item_title`        VARCHAR(100)    NOT NULL,
+    `item_cover_image`  VARCHAR(500)    DEFAULT NULL,
+    `buyer_id`          BIGINT UNSIGNED NOT NULL,
+    `seller_id`         BIGINT UNSIGNED NOT NULL,
+    `bid_id`            BIGINT UNSIGNED DEFAULT NULL,
+    `deal_price`        DECIMAL(12,2)   NOT NULL,
+    `deposit_amount`    DECIMAL(12,2)   NOT NULL DEFAULT 0,
+    `pay_amount`        DECIMAL(12,2)   NOT NULL,
+    `status`            TINYINT UNSIGNED NOT NULL DEFAULT 1 COMMENT '1待支付/2已支付/3已发货/4已完成/5已取消/6已关闭',
+    `pay_deadline`      DATETIME        NOT NULL,
+    `paid_at`           DATETIME        DEFAULT NULL,
+    `shipped_at`        DATETIME        DEFAULT NULL,
+    `completed_at`      DATETIME        DEFAULT NULL,
+    `closed_at`         DATETIME        DEFAULT NULL,
+    `close_reason`      VARCHAR(255)    DEFAULT NULL,
+    `tenant_id`         BIGINT UNSIGNED NOT NULL DEFAULT 0,
+    `created_at`        DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at`        DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_order_no` (`order_no`),
+    UNIQUE KEY `uk_item` (`item_id`),
+    KEY `idx_buyer_status_created` (`buyer_id`, `status`, `created_at` DESC),
+    KEY `idx_seller_status_created` (`seller_id`, `status`, `created_at` DESC),
+    KEY `idx_pay_deadline` (`status`, `pay_deadline`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='拍卖订单';
+
 CREATE TABLE IF NOT EXISTS `biz_notification` (
     `id`              BIGINT UNSIGNED NOT NULL,
     `user_id`         BIGINT UNSIGNED NOT NULL,

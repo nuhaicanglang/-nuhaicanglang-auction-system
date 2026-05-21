@@ -7,6 +7,7 @@ import com.auction.business.entity.BizBid;
 import com.auction.business.mapper.BizBidMapper;
 import com.auction.business.service.AuctionItemService;
 import com.auction.business.service.BidService;
+import com.auction.business.service.OrderService;
 import com.auction.business.vo.BidResultVO;
 import com.auction.business.vo.BidVO;
 import com.auction.common.exception.BizException;
@@ -56,6 +57,7 @@ public class BidServiceImpl implements BidService {
     private final BidValidatorChain validatorChain;
     private final WsPusher wsPusher;
     private final RabbitTemplate rabbitTemplate;
+    private final OrderService orderService;
     private final SnowflakeIdWorker idWorker = new SnowflakeIdWorker();
 
     public BidServiceImpl(StringRedisTemplate redisTemplate,
@@ -65,7 +67,8 @@ public class BidServiceImpl implements BidService {
                           BizBidMapper bidMapper,
                           BidValidatorChain validatorChain,
                           WsPusher wsPusher,
-                          RabbitTemplate rabbitTemplate) {
+                          RabbitTemplate rabbitTemplate,
+                          OrderService orderService) {
         this.redisTemplate = redisTemplate;
         this.bidScript = bidScript;
         this.buyNowScript = buyNowScript;
@@ -74,6 +77,7 @@ public class BidServiceImpl implements BidService {
         this.validatorChain = validatorChain;
         this.wsPusher = wsPusher;
         this.rabbitTemplate = rabbitTemplate;
+        this.orderService = orderService;
     }
 
     @Override
@@ -202,6 +206,7 @@ public class BidServiceImpl implements BidService {
             vo.setDeal(true);
             vo.setStatus(5);
             log.info("一口价触达成交: itemId={}, winnerId={}, price={}", itemId, userId, price);
+            orderService.createPendingOrder(item, userId, bidId, price);
             wsPusher.pushAuctionStateChange(itemId, 5, "一口价成交，成交价：" + price.toPlainString());
             AuctionWonMessage wonMsg = AuctionWonMessage.builder()
                     .itemId(itemId)
@@ -319,6 +324,7 @@ public class BidServiceImpl implements BidService {
                 .update();
 
         log.info("一口价成交: itemId={}, winnerId={}, price={}, bidId={}", itemId, userId, buyNowPrice, bidId);
+        orderService.createPendingOrder(item, userId, bidId, buyNowPrice);
 
         // 5. WebSocket 广播
         String idStr = String.valueOf(userId);

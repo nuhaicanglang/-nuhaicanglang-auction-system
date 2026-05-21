@@ -1,0 +1,47 @@
+package com.auction.business.controller;
+
+import com.auction.business.dto.OrderQueryDTO;
+import com.auction.business.service.OrderService;
+import com.auction.business.vo.OrderVO;
+import com.auction.common.core.Result;
+import com.auction.framework.security.LoginUser;
+import com.auction.framework.security.SecurityUtils;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+/**
+ * 订单接口。
+ * 买家查看“我买到的”，卖家查看“我卖出的”，详情只允许订单双方查看。
+ */
+@RestController
+@RequiredArgsConstructor
+@RequestMapping("/api/orders")
+public class OrderController {
+
+    private final OrderService orderService;
+
+    /** 买家视角：我买到的订单。 */
+    @GetMapping("/buyer")
+    public Result<IPage<OrderVO>> buyerOrders(OrderQueryDTO query) {
+        LoginUser user = SecurityUtils.getLoginUser();
+        return Result.success(orderService.listBuyerOrders(user.getUserId(), query));
+    }
+
+    /** 卖家视角：我卖出的订单。 */
+    @GetMapping("/seller")
+    public Result<IPage<OrderVO>> sellerOrders(OrderQueryDTO query) {
+        LoginUser user = SecurityUtils.getLoginUser();
+        return Result.success(orderService.listSellerOrders(user.getUserId(), query));
+    }
+
+    /** 订单详情。 */
+    @GetMapping("/{id}")
+    public Result<OrderVO> detail(@PathVariable Long id) {
+        LoginUser user = SecurityUtils.getLoginUser();
+        return Result.success(orderService.getOrderDetail(id, user.getUserId()));
+    }
+}
