@@ -315,6 +315,49 @@ CREATE TABLE IF NOT EXISTS `biz_bid` (
     KEY `idx_bidder`              (`bidder_id`, `created_at` DESC)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='出价记录';
 
+CREATE TABLE IF NOT EXISTS `biz_wallet` (
+    `id`              BIGINT UNSIGNED NOT NULL,
+    `user_id`         BIGINT UNSIGNED NOT NULL,
+    `balance`         DECIMAL(14,2)   NOT NULL DEFAULT 0 COMMENT '可用余额',
+    `frozen_balance`  DECIMAL(14,2)   NOT NULL DEFAULT 0 COMMENT '冻结金额',
+    `status`          TINYINT UNSIGNED NOT NULL DEFAULT 1 COMMENT '1正常/0冻结',
+    `tenant_id`       BIGINT UNSIGNED NOT NULL DEFAULT 0,
+    `created_at`      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at`      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    `version`         INT UNSIGNED    NOT NULL DEFAULT 0,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_user` (`user_id`),
+    KEY `idx_status` (`status`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户钱包主表';
+
+CREATE TABLE IF NOT EXISTS `biz_wallet_transaction` (
+    `id`              BIGINT UNSIGNED NOT NULL,
+    `transaction_no`  VARCHAR(40)     NOT NULL,
+    `wallet_id`       BIGINT UNSIGNED NOT NULL,
+    `user_id`         BIGINT UNSIGNED NOT NULL,
+    `action_type`     VARCHAR(32)     NOT NULL COMMENT 'RECHARGE/DEDUCT/FREEZE/UNFREEZE/BID_FREEZE/BID_UNFREEZE/BID_DEDUCT',
+    `direction`       TINYINT         NOT NULL COMMENT '1收入/-1支出/0冻结内部流转',
+    `amount`          DECIMAL(14,2)   NOT NULL,
+    `balance_before`  DECIMAL(14,2)   NOT NULL,
+    `balance_after`   DECIMAL(14,2)   NOT NULL,
+    `frozen_before`   DECIMAL(14,2)   NOT NULL,
+    `frozen_after`    DECIMAL(14,2)   NOT NULL,
+    `biz_type`        VARCHAR(32)     DEFAULT NULL,
+    `biz_id`          VARCHAR(64)     DEFAULT NULL,
+    `related_item_id` BIGINT UNSIGNED DEFAULT NULL,
+    `operator_id`     BIGINT UNSIGNED DEFAULT NULL,
+    `remark`          VARCHAR(255)    DEFAULT NULL,
+    `idempotent_key`  VARCHAR(128)    DEFAULT NULL,
+    `tenant_id`       BIGINT UNSIGNED NOT NULL DEFAULT 0,
+    `created_at`      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_transaction_no` (`transaction_no`),
+    UNIQUE KEY `uk_idempotent_key` (`idempotent_key`),
+    KEY `idx_user_created` (`user_id`, `created_at` DESC),
+    KEY `idx_item_action` (`related_item_id`, `action_type`),
+    KEY `idx_biz` (`biz_type`, `biz_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='钱包资金流水';
+
 CREATE TABLE IF NOT EXISTS `biz_order` (
     `id`                BIGINT UNSIGNED NOT NULL,
     `order_no`          VARCHAR(40)     NOT NULL,

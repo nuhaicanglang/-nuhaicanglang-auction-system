@@ -8,6 +8,7 @@ import com.auction.business.mapper.BizBidMapper;
 import com.auction.business.service.AuctionItemService;
 import com.auction.business.service.BidService;
 import com.auction.business.service.OrderService;
+import com.auction.business.service.WalletService;
 import com.auction.business.vo.BidResultVO;
 import com.auction.business.vo.BidVO;
 import com.auction.common.exception.BizException;
@@ -58,6 +59,7 @@ public class BidServiceImpl implements BidService {
     private final WsPusher wsPusher;
     private final RabbitTemplate rabbitTemplate;
     private final OrderService orderService;
+    private final WalletService walletService;
     private final SnowflakeIdWorker idWorker = new SnowflakeIdWorker();
 
     public BidServiceImpl(StringRedisTemplate redisTemplate,
@@ -68,7 +70,8 @@ public class BidServiceImpl implements BidService {
                           BidValidatorChain validatorChain,
                           WsPusher wsPusher,
                           RabbitTemplate rabbitTemplate,
-                          OrderService orderService) {
+                          OrderService orderService,
+                          WalletService walletService) {
         this.redisTemplate = redisTemplate;
         this.bidScript = bidScript;
         this.buyNowScript = buyNowScript;
@@ -78,6 +81,7 @@ public class BidServiceImpl implements BidService {
         this.wsPusher = wsPusher;
         this.rabbitTemplate = rabbitTemplate;
         this.orderService = orderService;
+        this.walletService = walletService;
     }
 
     @Override
@@ -94,32 +98,42 @@ public class BidServiceImpl implements BidService {
                 .build();
         validatorChain.execute(ctx);
         BizAuctionItem item = ctx.getItem();
+        BigDecimal deposit = item.getDeposit() == null ? BigDecimal.ZERO : item.getDeposit();
+        boolean frozenThisTime = walletService.freezeBidDeposit(userId, itemId, deposit, requestId);
 
         // 2. 执行 Lua 脚本原子出价
         long bidId = idWorker.nextId();
         long bidTimeMs = System.currentTimeMillis();
 
-        Long result = redisTemplate.execute(bidScript,
-                List.of(
-                        RedisKey.itemPrice(itemId),
-                        RedisKey.bidQueue(itemId),
-                        RedisKey.idem(requestId),
-                        RedisKey.itemStatus(itemId)
-                ),
-                String.valueOf(userId),
-                price.toPlainString(),
-                String.valueOf(bidTimeMs),
-                item.getBidIncrement().toPlainString(),
-                String.valueOf(bidId),
-                requestId,
-                item.getBuyNowPrice() != null ? item.getBuyNowPrice().toPlainString() : "",
-                "5"
-        );
+        Long result;
+        try {
+            result = redisTemplate.execute(bidScript,
+                    List.of(
+                            RedisKey.itemPrice(itemId),
+                            RedisKey.bidQueue(itemId),
+                            RedisKey.idem(requestId),
+                            RedisKey.itemStatus(itemId)
+                    ),
+                    String.valueOf(userId),
+                    price.toPlainString(),
+                    String.valueOf(bidTimeMs),
+                    item.getBidIncrement().toPlainString(),
+                    String.valueOf(bidId),
+                    requestId,
+                    item.getBuyNowPrice() != null ? item.getBuyNowPrice().toPlainString() : "",
+                    "5"
+            );
+        } catch (RuntimeException e) {
+            rollbackDepositIfNeeded(userId, itemId, deposit, requestId, frozenThisTime);
+            throw e;
+        }
 
         if (result == null) {
+            rollbackDepositIfNeeded(userId, itemId, deposit, requestId, frozenThisTime);
             throw new BizException(99999, "出价脚本执行异常");
         }
         if (result == 0) {
+            rollbackDepositIfNeeded(userId, itemId, deposit, requestId, frozenThisTime);
             // 读取 Redis 当前价，提示最低出价
             String curStr = redisTemplate.opsForValue().get(RedisKey.itemPrice(itemId));
             BigDecimal cur = curStr != null ? new BigDecimal(curStr) : item.getCurrentPrice();
@@ -127,9 +141,11 @@ public class BidServiceImpl implements BidService {
             throw new BizException(40001, "出价金额不足，最低出价 " + minBid.toPlainString());
         }
         if (result == -1) {
+            rollbackDepositIfNeeded(userId, itemId, deposit, requestId, frozenThisTime);
             throw new BizException(40004, "重复请求，请勿重复提交");
         }
         if (result == -2) {
+            rollbackDepositIfNeeded(userId, itemId, deposit, requestId, frozenThisTime);
             throw new BizException(40003, "拍卖已成交，无法继续出价");
         }
 
@@ -207,6 +223,7 @@ public class BidServiceImpl implements BidService {
             vo.setStatus(5);
             log.info("一口价触达成交: itemId={}, winnerId={}, price={}", itemId, userId, price);
             orderService.createPendingOrder(item, userId, bidId, price);
+            walletService.settleBidDeposits(itemId, userId, deposit);
             wsPusher.pushAuctionStateChange(itemId, 5, "一口价成交，成交价：" + price.toPlainString());
             AuctionWonMessage wonMsg = AuctionWonMessage.builder()
                     .itemId(itemId)
@@ -265,34 +282,45 @@ public class BidServiceImpl implements BidService {
         }
 
         BigDecimal buyNowPrice = item.getBuyNowPrice();
+        BigDecimal deposit = item.getDeposit() == null ? BigDecimal.ZERO : item.getDeposit();
+        boolean frozenThisTime = walletService.freezeBidDeposit(userId, itemId, deposit, requestId);
         long bidId = idWorker.nextId();
         long bidTimeMs = System.currentTimeMillis();
 
         // 2. 执行 buy_now Lua 脚本：原子写价格 + Redis 状态 key + 幂等
         //    KEYS: [price, queue, idem, status]
         //    ARGV: [userId, buyNowPrice, bidTimeMs, bidId, requestId, statusValue("5")]
-        Long result = redisTemplate.execute(buyNowScript,
-                List.of(
-                        RedisKey.itemPrice(itemId),
-                        RedisKey.bidQueue(itemId),
-                        RedisKey.idem(requestId),
-                        RedisKey.itemStatus(itemId)
-                ),
-                String.valueOf(userId),
-                buyNowPrice.toPlainString(),
-                String.valueOf(bidTimeMs),
-                String.valueOf(bidId),
-                requestId,
-                "5"
-        );
+        Long result;
+        try {
+            result = redisTemplate.execute(buyNowScript,
+                    List.of(
+                            RedisKey.itemPrice(itemId),
+                            RedisKey.bidQueue(itemId),
+                            RedisKey.idem(requestId),
+                            RedisKey.itemStatus(itemId)
+                    ),
+                    String.valueOf(userId),
+                    buyNowPrice.toPlainString(),
+                    String.valueOf(bidTimeMs),
+                    String.valueOf(bidId),
+                    requestId,
+                    "5"
+            );
+        } catch (RuntimeException e) {
+            rollbackDepositIfNeeded(userId, itemId, deposit, requestId, frozenThisTime);
+            throw e;
+        }
 
         if (result == null) {
+            rollbackDepositIfNeeded(userId, itemId, deposit, requestId, frozenThisTime);
             throw new BizException(99999, "一口价脚本执行异常");
         }
         if (result == -1) {
+            rollbackDepositIfNeeded(userId, itemId, deposit, requestId, frozenThisTime);
             throw new BizException(40004, "重复请求，请勿重复提交");
         }
         if (result == 0) {
+            rollbackDepositIfNeeded(userId, itemId, deposit, requestId, frozenThisTime);
             throw new BizException(40003, "拍卖已结束，无法一口价购买");
         }
 
@@ -325,6 +353,7 @@ public class BidServiceImpl implements BidService {
 
         log.info("一口价成交: itemId={}, winnerId={}, price={}, bidId={}", itemId, userId, buyNowPrice, bidId);
         orderService.createPendingOrder(item, userId, bidId, buyNowPrice);
+        walletService.settleBidDeposits(itemId, userId, deposit);
 
         // 5. WebSocket 广播
         String idStr = String.valueOf(userId);
@@ -350,6 +379,13 @@ public class BidServiceImpl implements BidService {
         vo.setExtended(false);
         vo.setStatus(5);
         return vo;
+    }
+
+    private void rollbackDepositIfNeeded(Long userId, Long itemId, BigDecimal deposit,
+                                         String requestId, boolean frozenThisTime) {
+        if (frozenThisTime) {
+            walletService.cancelBidDepositFreeze(userId, itemId, deposit, requestId);
+        }
     }
 
     private BidVO toVO(BizBid bid) {

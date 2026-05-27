@@ -4,7 +4,7 @@
 
 ## 项目状态
 
-当前已完成到 **阶段 5 / Day 20：订单创建与查询**。
+当前已完成到 **阶段 5 / Day 21：钱包 + 保证金账本**。
 
 | 阶段 | 主题 | 状态 | 主要产出 |
 |---|---|---|---|
@@ -23,6 +23,7 @@
 | Day 18 | 延迟队列（拍卖结算） | 已完成 | `AuctionSettleConsumer` DLX结算、审核通过投递TTL消息、反狙击重投延迟消息、流拍处理 |
 | Day 19 | 通知体系 | 已完成 | `NotifyService`策略模式、站内信表、`BidOutbidConsumer`、`AuctionWonConsumer`、WebSocket个人通知 |
 | Day 20 | 订单创建与查询 | 已完成 | `biz_order`、成交生成待支付订单、买家/卖家订单列表、订单详情 |
+| Day 21 | 钱包 + 保证金账本 | 已完成 | `biz_wallet`、`biz_wallet_transaction`、管理员调账、个人流水、出价冻结、结算解冻/抵扣 |
 
 ## 技术栈
 
@@ -466,6 +467,7 @@ Authorization: Bearer <token>
 | `ab13dfc` | Day 18：延迟队列拍卖结算（AuctionSettleConsumer + TTL延迟 + 反狙击重投） |
 | `f17c870` | Day 19：通知体系（站内信 + 被超价通知 + 中标通知 + WS个人通知） |
 | `81be310` | Day 20：订单创建与查询（成交生成待支付订单 + 买家/卖家查询） |
+| `本次提交` | Day 21：钱包 + 保证金账本（主表流水双写 + 保证金冻结/解冻/抵扣） |
 
 ## WebSocket 使用说明
 
@@ -502,11 +504,11 @@ client.activate();
 
 ## 下一步
 
-继续 **Day 21：钱包 + 保证金账本**：
+继续 **Day 22：模拟支付**：
 
-- `WalletService.adjust(cmd)` 统一调账入口
-- 钱包主表 + 资金流水双写
-- 出价保证金冻结、结算统一解冻/抵扣
+- `Payment` 支付流水表
+- `/orders/{id}/pay` 模拟支付接口
+- 订单状态从待支付推进到已支付
 
 ## README 维护约定
 

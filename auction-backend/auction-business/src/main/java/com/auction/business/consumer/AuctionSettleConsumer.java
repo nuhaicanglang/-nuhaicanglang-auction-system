@@ -5,6 +5,7 @@ import com.auction.business.entity.BizBid;
 import com.auction.business.mapper.BizBidMapper;
 import com.auction.business.service.AuctionItemService;
 import com.auction.business.service.OrderService;
+import com.auction.business.service.WalletService;
 import com.auction.framework.redis.RedisKey;
 import com.auction.framework.websocket.WsPusher;
 import com.auction.mq.constant.MqConstants;
@@ -45,6 +46,7 @@ public class AuctionSettleConsumer {
     private final StringRedisTemplate redisTemplate;
     private final RabbitTemplate rabbitTemplate;
     private final OrderService orderService;
+    private final WalletService walletService;
 
     @RabbitListener(queues = MqConstants.QUEUE_AUCTION_SETTLE)
     public void onMessage(AuctionSettleMessage msg, Channel channel,
@@ -106,6 +108,7 @@ public class AuctionSettleConsumer {
                 log.info("拍卖结算成交: itemId={}, winnerId={}, finalPrice={}",
                         itemId, topBid.getBidderId(), topBid.getBidPrice());
                 orderService.createPendingOrder(item, topBid.getBidderId(), topBid.getId(), topBid.getBidPrice());
+                walletService.settleBidDeposits(itemId, topBid.getBidderId(), item.getDeposit());
                 wsPusher.pushAuctionStateChange(itemId, 5,
                         "拍卖结束，成交价：" + topBid.getBidPrice().toPlainString());
                 AuctionWonMessage wonMsg = AuctionWonMessage.builder()
@@ -128,6 +131,7 @@ public class AuctionSettleConsumer {
                         .update();
 
                 log.info("拍卖流拍: itemId={}", itemId);
+                walletService.settleBidDeposits(itemId, null, item.getDeposit());
                 wsPusher.pushAuctionStateChange(itemId, 6, "拍卖结束，无人出价，流拍");
             }
 
