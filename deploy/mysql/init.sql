@@ -388,6 +388,28 @@ CREATE TABLE IF NOT EXISTS `biz_order` (
     KEY `idx_pay_deadline` (`status`, `pay_deadline`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='拍卖订单';
 
+CREATE TABLE IF NOT EXISTS `biz_payment` (
+    `id`              BIGINT UNSIGNED NOT NULL,
+    `payment_no`      VARCHAR(40)     NOT NULL,
+    `order_id`        BIGINT UNSIGNED NOT NULL,
+    `order_no`        VARCHAR(40)     NOT NULL,
+    `payer_id`        BIGINT UNSIGNED NOT NULL,
+    `amount`          DECIMAL(12,2)   NOT NULL,
+    `pay_method`      VARCHAR(32)     NOT NULL DEFAULT 'WALLET',
+    `status`          TINYINT UNSIGNED NOT NULL DEFAULT 1 COMMENT '1成功/2失败/3关闭',
+    `paid_at`         DATETIME        DEFAULT NULL,
+    `idempotent_key`  VARCHAR(128)    NOT NULL,
+    `remark`          VARCHAR(255)    DEFAULT NULL,
+    `tenant_id`       BIGINT UNSIGNED NOT NULL DEFAULT 0,
+    `created_at`      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at`      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_payment_no` (`payment_no`),
+    UNIQUE KEY `uk_order` (`order_id`),
+    UNIQUE KEY `uk_idempotent_key` (`idempotent_key`),
+    KEY `idx_payer_created` (`payer_id`, `created_at` DESC)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='订单支付流水';
+
 CREATE TABLE IF NOT EXISTS `biz_notification` (
     `id`              BIGINT UNSIGNED NOT NULL,
     `user_id`         BIGINT UNSIGNED NOT NULL,

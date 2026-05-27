@@ -2,14 +2,18 @@ package com.auction.business.controller;
 
 import com.auction.business.dto.OrderQueryDTO;
 import com.auction.business.service.OrderService;
+import com.auction.business.service.PaymentService;
 import com.auction.business.vo.OrderVO;
+import com.auction.business.vo.PaymentVO;
 import com.auction.common.core.Result;
 import com.auction.framework.security.LoginUser;
 import com.auction.framework.security.SecurityUtils;
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -23,6 +27,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class OrderController {
 
     private final OrderService orderService;
+    private final PaymentService paymentService;
 
     /** 买家视角：我买到的订单。 */
     @GetMapping("/buyer")
@@ -43,5 +48,13 @@ public class OrderController {
     public Result<OrderVO> detail(@PathVariable Long id) {
         LoginUser user = SecurityUtils.getLoginUser();
         return Result.success(orderService.getOrderDetail(id, user.getUserId()));
+    }
+
+    /** 模拟钱包支付订单。 */
+    @PostMapping("/{id}/pay")
+    public Result<PaymentVO> pay(@PathVariable Long id, HttpServletRequest request) {
+        LoginUser user = SecurityUtils.getLoginUser();
+        String idempotentKey = request.getHeader("X-Idempotent-Key");
+        return Result.success(paymentService.payOrder(id, user.getUserId(), idempotentKey));
     }
 }
