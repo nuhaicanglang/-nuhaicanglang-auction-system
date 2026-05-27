@@ -4,7 +4,7 @@
 
 ## 项目状态
 
-当前已完成到 **阶段 5 / Day 23：评价 + 信用分体系**。
+当前已完成到 **阶段 6 / Day 24：ES 索引与同步**。
 
 | 阶段 | 主题 | 状态 | 主要产出 |
 |---|---|---|---|
@@ -26,6 +26,7 @@
 | Day 21 | 钱包 + 保证金账本 | 已完成 | `biz_wallet`、`biz_wallet_transaction`、管理员调账、个人流水、出价冻结、结算解冻/抵扣 |
 | Day 22 | 模拟支付 | 已完成 | `biz_payment`、钱包扣款支付、支付流水幂等、订单待支付推进到已支付、支付超时自动关闭 |
 | Day 23 | 评价 + 信用分 | 已完成 | `biz_review`、`biz_credit`、`biz_credit_log`、`CreditService` 事件应用、MQ 事件驱动、每日加分限额、信用低于30分自动禁用、每月信用恢复定时任务 |
+| Day 24 | ES 索引与同步 | 已完成 | `ItemDoc`(`auction_items` 索引 + ik 中文分词)、`ItemDocRepository`、`EsInitRunner` 启动全量同步、`EsSyncConsumer` 消费 `item.sync.queue` 增量同步、商品状态/价格/出价数变更触发 UPSERT、下架触发 DELETE |
 
 ## 技术栈
 
@@ -473,6 +474,7 @@ Authorization: Bearer <token>
 | `6367a1b` | Day 22：模拟支付（支付流水 + 钱包扣款 + 订单状态推进） |
 | `5594338` | Day 22 补充：订单支付超时延迟关闭 |
 | `fea6d17` | Day 23：评价 + 信用分体系（`biz_review` / `biz_credit` / `biz_credit_log` + MQ 事件驱动 + 定时恢复） |
+| _pending_ | Day 24：ES 索引与同步（`ItemDoc` + ik 分词 + `EsSyncConsumer` + 启动全量同步 + MQ 增量同步） |
 
 ## WebSocket 使用说明
 
@@ -509,11 +511,11 @@ client.activate();
 
 ## 下一步
 
-继续 **阶段 6 / Day 24：ES 索引与同步**：
+继续 **阶段 6 / Day 25：搜索接口**：
 
-- `ItemDoc` 模型与 mapping
-- 应用启动时初始化索引
-- `EsSyncConsumer` 消费 MQ 同步商品到 ES
+- `/search/items`：bool query + filter + highlight + 分类聚合
+- `/search/suggest`：completion suggester
+- 搜索历史（Redis List）
 
 ## README 维护约定
 

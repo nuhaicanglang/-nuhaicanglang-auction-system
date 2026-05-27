@@ -7,6 +7,7 @@ import com.auction.business.service.AuctionItemService;
 import com.auction.mq.constant.MqConstants;
 import com.auction.mq.message.BidOutbidMessage;
 import com.auction.mq.message.BidMessage;
+import com.auction.mq.message.ItemSyncMessage;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.rabbitmq.client.Channel;
 import lombok.RequiredArgsConstructor;
@@ -109,7 +110,11 @@ public class BidPersistConsumer {
             log.info("出价落库成功: bidId={}, itemId={}, price={}",
                     msg.getBidId(), msg.getItemId(), msg.getBidPrice());
 
-            // 3. 手动 ack
+            // 3. 同步 ES 索引（价格、出价数变更）
+            rabbitTemplate.convertAndSend(MqConstants.EXCHANGE_DIRECT, MqConstants.RK_ITEM_SYNC,
+                    ItemSyncMessage.builder().itemId(msg.getItemId()).action("UPSERT").build());
+
+            // 4. 手动 ack
             channel.basicAck(deliveryTag, false);
 
         } catch (Exception e) {

@@ -19,6 +19,7 @@ import com.auction.mq.constant.MqConstants;
 import com.auction.mq.message.AuctionSettleMessage;
 import com.auction.mq.message.AuctionWonMessage;
 import com.auction.mq.message.BidMessage;
+import com.auction.mq.message.ItemSyncMessage;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -236,6 +237,9 @@ public class BidServiceImpl implements BidService {
                     MqConstants.EXCHANGE_DIRECT,
                     MqConstants.RK_AUCTION_WON,
                     wonMsg);
+            // 同步 ES 索引（一口价成交，状态=5）
+            rabbitTemplate.convertAndSend(MqConstants.EXCHANGE_DIRECT, MqConstants.RK_ITEM_SYNC,
+                    ItemSyncMessage.builder().itemId(itemId).action("UPSERT").build());
         }
 
         // 6. WebSocket 出价广播
@@ -371,6 +375,9 @@ public class BidServiceImpl implements BidService {
                 MqConstants.EXCHANGE_DIRECT,
                 MqConstants.RK_AUCTION_WON,
                 wonMsg);
+        // 同步 ES 索引（一口价成交）
+        rabbitTemplate.convertAndSend(MqConstants.EXCHANGE_DIRECT, MqConstants.RK_ITEM_SYNC,
+                ItemSyncMessage.builder().itemId(itemId).action("UPSERT").build());
 
         BidResultVO vo = new BidResultVO();
         vo.setBidId(bidId);

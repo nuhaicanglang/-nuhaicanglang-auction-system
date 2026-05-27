@@ -41,6 +41,9 @@ public final class MqConstants {
 
     public static final String QUEUE_CREDIT_EVENT = "credit.event.queue";
 
+    /** ES 商品同步队列：商品变更时写入 ES */
+    public static final String QUEUE_ITEM_SYNC = "item.sync.queue";
+
     // ==================== 路由键 ====================
 
     public static final String RK_BID_PERSIST = "bid.persist";
@@ -51,4 +54,5 @@ public final class MqConstants {
     public static final String RK_ORDER_TIMEOUT = "order.timeout";
     public static final String RK_ORDER_TIMEOUT_DELAY = "order.timeout.delay";
     public static final String RK_CREDIT_EVENT = "credit.event";
+    public static final String RK_ITEM_SYNC = "item.sync";
 }

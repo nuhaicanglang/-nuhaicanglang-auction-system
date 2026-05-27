@@ -11,6 +11,7 @@ import com.auction.framework.websocket.WsPusher;
 import com.auction.mq.constant.MqConstants;
 import com.auction.mq.message.AuctionSettleMessage;
 import com.auction.mq.message.AuctionWonMessage;
+import com.auction.mq.message.ItemSyncMessage;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.rabbitmq.client.Channel;
 import lombok.RequiredArgsConstructor;
@@ -138,6 +139,10 @@ public class AuctionSettleConsumer {
             // 6. 清理 Redis 缓存
             redisTemplate.delete(RedisKey.itemPrice(itemId));
             redisTemplate.delete(RedisKey.itemStatus(itemId));
+
+            // 7. 同步 ES 索引（状态变更）
+            rabbitTemplate.convertAndSend(MqConstants.EXCHANGE_DIRECT, MqConstants.RK_ITEM_SYNC,
+                    ItemSyncMessage.builder().itemId(itemId).action("UPSERT").build());
 
             channel.basicAck(deliveryTag, false);
 

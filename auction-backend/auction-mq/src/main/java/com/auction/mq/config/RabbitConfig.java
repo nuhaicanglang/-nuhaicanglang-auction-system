@@ -130,6 +130,12 @@ public class RabbitConfig {
         return QueueBuilder.durable(MqConstants.QUEUE_CREDIT_EVENT).build();
     }
 
+    /** ES 商品同步队列 */
+    @Bean
+    public Queue itemSyncQueue() {
+        return QueueBuilder.durable(MqConstants.QUEUE_ITEM_SYNC).build();
+    }
+
     // ==================== 绑定关系 ====================
 
     @Bean
@@ -173,6 +179,13 @@ public class RabbitConfig {
         return BindingBuilder.bind(creditEventQueue)
                 .to(auctionDirectExchange)
                 .with(MqConstants.RK_CREDIT_EVENT);
+    }
+
+    @Bean
+    public Binding bindItemSync(Queue itemSyncQueue, DirectExchange auctionDirectExchange) {
+        return BindingBuilder.bind(itemSyncQueue)
+                .to(auctionDirectExchange)
+                .with(MqConstants.RK_ITEM_SYNC);
     }
 
     /** 死信交换机 → 结算队列（延迟队列消息到期后最终到达此处） */

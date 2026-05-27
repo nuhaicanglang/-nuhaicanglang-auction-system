@@ -10,6 +10,8 @@ import com.auction.business.service.AuctionItemService;
 import com.auction.business.vo.AuctionItemVO;
 import com.auction.common.exception.BizException;
 import com.auction.common.util.SnowflakeIdWorker;
+import com.auction.mq.constant.MqConstants;
+import com.auction.mq.message.ItemSyncMessage;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -19,6 +21,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -50,6 +53,7 @@ public class AuctionItemServiceImpl extends ServiceImpl<BizAuctionItemMapper, Bi
 
     private final BizCategoryMapper categoryMapper;
     private final ObjectMapper objectMapper;
+    private final RabbitTemplate rabbitTemplate;
     private final SnowflakeIdWorker idWorker = new SnowflakeIdWorker();
 
     @Override
@@ -162,6 +166,13 @@ public class AuctionItemServiceImpl extends ServiceImpl<BizAuctionItemMapper, Bi
         item.setStatus(7);
         item.setUpdatedBy(sellerId);
         updateById(item);
+        sendItemSync(id, "DELETE");
+    }
+
+    /** 发送商品 ES 同步消息 */
+    public void sendItemSync(Long itemId, String action) {
+        rabbitTemplate.convertAndSend(MqConstants.EXCHANGE_DIRECT, MqConstants.RK_ITEM_SYNC,
+                ItemSyncMessage.builder().itemId(itemId).action(action).build());
     }
 
     @Override

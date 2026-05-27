@@ -11,6 +11,7 @@ import com.auction.framework.redis.RedisKey;
 import com.auction.framework.security.SecurityUtils;
 import com.auction.mq.constant.MqConstants;
 import com.auction.mq.message.AuctionSettleMessage;
+import com.auction.mq.message.ItemSyncMessage;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
@@ -105,6 +106,11 @@ public class AdminItemController {
         item.setUpdatedBy(adminId);
 
         auctionItemService.updateById(item);
+        // 审核通过后同步到 ES
+        if ("PASS".equalsIgnoreCase(dto.getAction())) {
+            rabbitTemplate.convertAndSend(MqConstants.EXCHANGE_DIRECT, MqConstants.RK_ITEM_SYNC,
+                    ItemSyncMessage.builder().itemId(id).action("UPSERT").build());
+        }
         return Result.success(null);
     }
 
@@ -122,6 +128,8 @@ public class AdminItemController {
         item.setStatus(7);
         item.setUpdatedBy(SecurityUtils.getUserId());
         auctionItemService.updateById(item);
+        rabbitTemplate.convertAndSend(MqConstants.EXCHANGE_DIRECT, MqConstants.RK_ITEM_SYNC,
+                ItemSyncMessage.builder().itemId(id).action("DELETE").build());
         return Result.success(null);
     }
 
