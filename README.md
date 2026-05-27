@@ -474,7 +474,7 @@ Authorization: Bearer <token>
 | `6367a1b` | Day 22：模拟支付（支付流水 + 钱包扣款 + 订单状态推进） |
 | `5594338` | Day 22 补充：订单支付超时延迟关闭 |
 | `fea6d17` | Day 23：评价 + 信用分体系（`biz_review` / `biz_credit` / `biz_credit_log` + MQ 事件驱动 + 定时恢复） |
-| _pending_ | Day 24：ES 索引与同步（`ItemDoc` + ik 分词 + `EsSyncConsumer` + 启动全量同步 + MQ 增量同步） |
+| `4b7b57a` | Day 24：ES 索引与同步（`ItemDoc` + ik 分词 + `EsSyncConsumer` + 启动全量同步 + MQ 增量同步） |
 
 ## WebSocket 使用说明
 
