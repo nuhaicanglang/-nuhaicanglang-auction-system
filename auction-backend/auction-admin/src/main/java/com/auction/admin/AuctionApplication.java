@@ -2,12 +2,14 @@ package com.auction.admin;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 /**
  * 后端应用启动入口。
  * scanBasePackages 指定扫描 com.auction 下所有模块，让 common、framework、system 等模块中的 Bean 都能被 Spring 管理。
  */
 @SpringBootApplication(scanBasePackages = "com.auction")
+@EnableScheduling
 public class AuctionApplication {
 
     /**

@@ -57,4 +57,12 @@ public class OrderController {
         String idempotentKey = request.getHeader("X-Idempotent-Key");
         return Result.success(paymentService.payOrder(id, user.getUserId(), idempotentKey));
     }
+
+    /** 买家确认完成订单（仅已支付/已发货状态可确认）。 */
+    @PostMapping("/{id}/complete")
+    public Result<Void> complete(@PathVariable Long id) {
+        LoginUser user = SecurityUtils.getLoginUser();
+        orderService.completeOrder(id, user.getUserId());
+        return Result.success();
+    }
 }

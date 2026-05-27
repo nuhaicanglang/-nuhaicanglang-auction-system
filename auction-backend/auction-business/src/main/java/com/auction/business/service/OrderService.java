@@ -26,4 +26,7 @@ public interface OrderService {
 
     /** 支付超时关闭订单，仅待支付订单会被关闭。 */
     boolean closeTimeoutOrder(Long orderId, Long expectedPayDeadlineMs);
+
+    /** 买家确认完成订单。 */
+    void completeOrder(Long orderId, Long userId);
 }

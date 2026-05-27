@@ -125,6 +125,11 @@ public class RabbitConfig {
                 .build();
     }
 
+    @Bean
+    public Queue creditEventQueue() {
+        return QueueBuilder.durable(MqConstants.QUEUE_CREDIT_EVENT).build();
+    }
+
     // ==================== 绑定关系 ====================
 
     @Bean
@@ -161,6 +166,13 @@ public class RabbitConfig {
         return BindingBuilder.bind(orderTimeoutDelayQueue)
                 .to(auctionDirectExchange)
                 .with(MqConstants.RK_ORDER_TIMEOUT_DELAY);
+    }
+
+    @Bean
+    public Binding bindCreditEvent(Queue creditEventQueue, DirectExchange auctionDirectExchange) {
+        return BindingBuilder.bind(creditEventQueue)
+                .to(auctionDirectExchange)
+                .with(MqConstants.RK_CREDIT_EVENT);
     }
 
     /** 死信交换机 → 结算队列（延迟队列消息到期后最终到达此处） */

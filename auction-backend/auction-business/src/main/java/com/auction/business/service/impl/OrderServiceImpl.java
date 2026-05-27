@@ -9,6 +9,7 @@ import com.auction.business.vo.OrderVO;
 import com.auction.common.exception.BizException;
 import com.auction.common.util.SnowflakeIdWorker;
 import com.auction.mq.constant.MqConstants;
+import com.auction.mq.message.CreditEventMessage;
 import com.auction.mq.message.OrderTimeoutMessage;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
@@ -160,8 +161,33 @@ public class OrderServiceImpl implements OrderService {
         update.setCloseReason("支付超时自动关闭");
         update.setUpdatedAt(now);
         orderMapper.updateById(update);
+        sendCreditEvent("ORDER_TIMEOUT", order.getBuyerId(), orderId);
         log.info("订单支付超时自动关闭: orderId={}, orderNo={}", orderId, order.getOrderNo());
         return true;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void completeOrder(Long orderId, Long userId) {
+        BizOrder order = orderMapper.selectById(orderId);
+        if (order == null) {
+            throw new BizException(50001, "订单不存在");
+        }
+        if (!order.getBuyerId().equals(userId)) {
+            throw new BizException(50002, "只有买家可以确认完成订单");
+        }
+        if (!Integer.valueOf(2).equals(order.getStatus()) && !Integer.valueOf(3).equals(order.getStatus())) {
+            throw new BizException(50003, "当前订单状态不允许确认完成");
+        }
+        LocalDateTime now = LocalDateTime.now();
+        BizOrder update = new BizOrder();
+        update.setId(orderId);
+        update.setStatus(4);
+        update.setCompletedAt(now);
+        update.setUpdatedAt(now);
+        orderMapper.updateById(update);
+        sendCreditEvent("ORDER_DONE", order.getBuyerId(), orderId);
+        sendCreditEvent("ORDER_DONE", order.getSellerId(), orderId);
     }
 
     private LambdaQueryWrapper<BizOrder> baseQuery(OrderQueryDTO query) {
@@ -229,5 +255,14 @@ public class OrderServiceImpl implements OrderService {
                 MqConstants.RK_ORDER_TIMEOUT_DELAY,
                 msg,
                 ttlSetter);
+    }
+
+    private void sendCreditEvent(String eventType, Long userId, Long orderId) {
+        rabbitTemplate.convertAndSend(MqConstants.EXCHANGE_DIRECT, MqConstants.RK_CREDIT_EVENT,
+                CreditEventMessage.builder()
+                        .eventType(eventType)
+                        .userId(userId)
+                        .relatedId(String.valueOf(orderId))
+                        .build());
     }
 }

@@ -35,4 +35,8 @@ public final class RedisKey {
 
     /** 分类树缓存 */
     public static final String CATEGORY_TREE = "cache:category:tree";
+
+    public static String creditDaily(Long userId, String date) {
+        return "credit:daily:" + userId + ":" + date;
+    }
 }

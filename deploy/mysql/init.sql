@@ -410,6 +410,58 @@ CREATE TABLE IF NOT EXISTS `biz_payment` (
     KEY `idx_payer_created` (`payer_id`, `created_at` DESC)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='订单支付流水';
 
+CREATE TABLE IF NOT EXISTS `biz_review` (
+    `id`          BIGINT UNSIGNED NOT NULL,
+    `order_id`    BIGINT UNSIGNED NOT NULL,
+    `item_id`     BIGINT UNSIGNED NOT NULL,
+    `reviewer_id` BIGINT UNSIGNED NOT NULL,
+    `reviewee_id` BIGINT UNSIGNED NOT NULL,
+    `role_type`   VARCHAR(16)     NOT NULL COMMENT 'BUYER买家评价卖家/SELLER卖家评价买家',
+    `score`       TINYINT UNSIGNED NOT NULL COMMENT '1-5分',
+    `content`     VARCHAR(500)    DEFAULT NULL,
+    `status`      TINYINT UNSIGNED NOT NULL DEFAULT 1 COMMENT '1正常/2隐藏',
+    `tenant_id`   BIGINT UNSIGNED NOT NULL DEFAULT 0,
+    `created_at`  DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at`  DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_order_reviewer` (`order_id`, `reviewer_id`),
+    KEY `idx_reviewee_created` (`reviewee_id`, `created_at` DESC),
+    KEY `idx_item_created` (`item_id`, `created_at` DESC)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='订单评价';
+
+CREATE TABLE IF NOT EXISTS `biz_credit` (
+    `id`            BIGINT UNSIGNED NOT NULL,
+    `user_id`       BIGINT UNSIGNED NOT NULL,
+    `score`         INT             NOT NULL DEFAULT 80,
+    `level_name`    VARCHAR(32)     NOT NULL DEFAULT '良好',
+    `status`        TINYINT UNSIGNED NOT NULL DEFAULT 1 COMMENT '1正常/0禁用联动',
+    `last_event_at` DATETIME        DEFAULT NULL,
+    `tenant_id`     BIGINT UNSIGNED NOT NULL DEFAULT 0,
+    `created_at`    DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at`    DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_user` (`user_id`),
+    KEY `idx_score` (`score`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户信用分主表';
+
+CREATE TABLE IF NOT EXISTS `biz_credit_log` (
+    `id`             BIGINT UNSIGNED NOT NULL,
+    `user_id`        BIGINT UNSIGNED NOT NULL,
+    `event_type`     VARCHAR(32)     NOT NULL,
+    `related_id`     VARCHAR(64)     NOT NULL,
+    `delta_score`    INT             NOT NULL,
+    `score_before`   INT             NOT NULL,
+    `score_after`    INT             NOT NULL,
+    `remark`         VARCHAR(255)    DEFAULT NULL,
+    `idempotent_key` VARCHAR(128)    NOT NULL,
+    `tenant_id`      BIGINT UNSIGNED NOT NULL DEFAULT 0,
+    `created_at`     DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_idempotent_key` (`idempotent_key`),
+    KEY `idx_user_created` (`user_id`, `created_at` DESC),
+    KEY `idx_event_created` (`event_type`, `created_at` DESC)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='信用分变更流水';
+
 CREATE TABLE IF NOT EXISTS `biz_notification` (
     `id`              BIGINT UNSIGNED NOT NULL,
     `user_id`         BIGINT UNSIGNED NOT NULL,

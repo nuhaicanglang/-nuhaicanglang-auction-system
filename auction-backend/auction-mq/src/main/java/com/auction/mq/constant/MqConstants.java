@@ -39,6 +39,8 @@ public final class MqConstants {
     /** 订单支付超时延迟队列：订单创建后投递 TTL 消息 */
     public static final String QUEUE_ORDER_TIMEOUT_DELAY = "order.timeout.delay.queue";
 
+    public static final String QUEUE_CREDIT_EVENT = "credit.event.queue";
+
     // ==================== 路由键 ====================
 
     public static final String RK_BID_PERSIST = "bid.persist";
@@ -48,4 +50,5 @@ public final class MqConstants {
     public static final String RK_AUCTION_DELAY = "auction.delay";
     public static final String RK_ORDER_TIMEOUT = "order.timeout";
     public static final String RK_ORDER_TIMEOUT_DELAY = "order.timeout.delay";
+    public static final String RK_CREDIT_EVENT = "credit.event";
 }
