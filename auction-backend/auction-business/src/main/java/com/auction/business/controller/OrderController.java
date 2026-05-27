@@ -58,6 +58,14 @@ public class OrderController {
         return Result.success(paymentService.payOrder(id, user.getUserId(), idempotentKey));
     }
 
+    /** 卖家发货（仅已支付状态可发货）。 */
+    @PostMapping("/{id}/ship")
+    public Result<Void> ship(@PathVariable Long id) {
+        LoginUser user = SecurityUtils.getLoginUser();
+        orderService.shipOrder(id, user.getUserId());
+        return Result.success();
+    }
+
     /** 买家确认完成订单（仅已支付/已发货状态可确认）。 */
     @PostMapping("/{id}/complete")
     public Result<Void> complete(@PathVariable Long id) {

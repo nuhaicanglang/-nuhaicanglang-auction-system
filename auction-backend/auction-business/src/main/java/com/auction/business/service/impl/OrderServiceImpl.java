@@ -76,7 +76,7 @@ public class OrderServiceImpl implements OrderService {
         order.setDepositAmount(deposit);
         order.setPayAmount(payAmount);
         order.setStatus(1);
-        order.setPayDeadline(now.plusHours(24));
+        order.setPayDeadline(now.plusMinutes(30));
         order.setTenantId(0L);
         order.setCreatedAt(now);
         order.setUpdatedAt(now);
@@ -164,6 +164,28 @@ public class OrderServiceImpl implements OrderService {
         sendCreditEvent("ORDER_TIMEOUT", order.getBuyerId(), orderId);
         log.info("订单支付超时自动关闭: orderId={}, orderNo={}", orderId, order.getOrderNo());
         return true;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void shipOrder(Long orderId, Long userId) {
+        BizOrder order = orderMapper.selectById(orderId);
+        if (order == null) {
+            throw new BizException(50001, "订单不存在");
+        }
+        if (!order.getSellerId().equals(userId)) {
+            throw new BizException(50002, "只有卖家可以发货");
+        }
+        if (!Integer.valueOf(2).equals(order.getStatus())) {
+            throw new BizException(50003, "当前订单状态不允许发货");
+        }
+        LocalDateTime now = LocalDateTime.now();
+        BizOrder update = new BizOrder();
+        update.setId(orderId);
+        update.setStatus(3);
+        update.setShippedAt(now);
+        update.setUpdatedAt(now);
+        orderMapper.updateById(update);
     }
 
     @Override
