@@ -112,6 +112,19 @@ public class RabbitConfig {
                 .build();
     }
 
+    @Bean
+    public Queue orderTimeoutQueue() {
+        return QueueBuilder.durable(MqConstants.QUEUE_ORDER_TIMEOUT).build();
+    }
+
+    @Bean
+    public Queue orderTimeoutDelayQueue() {
+        return QueueBuilder.durable(MqConstants.QUEUE_ORDER_TIMEOUT_DELAY)
+                .deadLetterExchange(MqConstants.EXCHANGE_DLX)
+                .deadLetterRoutingKey(MqConstants.RK_ORDER_TIMEOUT)
+                .build();
+    }
+
     // ==================== 绑定关系 ====================
 
     @Bean
@@ -143,11 +156,25 @@ public class RabbitConfig {
                 .with(MqConstants.RK_AUCTION_DELAY);
     }
 
+    @Bean
+    public Binding bindOrderTimeoutDelay(Queue orderTimeoutDelayQueue, DirectExchange auctionDirectExchange) {
+        return BindingBuilder.bind(orderTimeoutDelayQueue)
+                .to(auctionDirectExchange)
+                .with(MqConstants.RK_ORDER_TIMEOUT_DELAY);
+    }
+
     /** 死信交换机 → 结算队列（延迟队列消息到期后最终到达此处） */
     @Bean
     public Binding bindAuctionSettle(Queue auctionSettleQueue, DirectExchange auctionDlxExchange) {
         return BindingBuilder.bind(auctionSettleQueue)
                 .to(auctionDlxExchange)
                 .with(MqConstants.RK_AUCTION_SETTLE);
+    }
+
+    @Bean
+    public Binding bindOrderTimeout(Queue orderTimeoutQueue, DirectExchange auctionDlxExchange) {
+        return BindingBuilder.bind(orderTimeoutQueue)
+                .to(auctionDlxExchange)
+                .with(MqConstants.RK_ORDER_TIMEOUT);
     }
 }

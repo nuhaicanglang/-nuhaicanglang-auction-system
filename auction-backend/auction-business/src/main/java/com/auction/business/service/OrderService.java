@@ -23,4 +23,7 @@ public interface OrderService {
 
     /** 订单详情，仅买家或卖家可查看。 */
     OrderVO getOrderDetail(Long orderId, Long userId);
+
+    /** 支付超时关闭订单，仅待支付订单会被关闭。 */
+    boolean closeTimeoutOrder(Long orderId, Long expectedPayDeadlineMs);
 }

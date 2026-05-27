@@ -33,6 +33,12 @@ public final class MqConstants {
     /** 延迟队列：商品开拍时投递 TTL 消息，到期后转入结算队列 */
     public static final String QUEUE_AUCTION_DELAY = "auction.delay.queue";
 
+    /** 订单支付超时队列：延迟到期后关闭未支付订单 */
+    public static final String QUEUE_ORDER_TIMEOUT = "order.timeout.queue";
+
+    /** 订单支付超时延迟队列：订单创建后投递 TTL 消息 */
+    public static final String QUEUE_ORDER_TIMEOUT_DELAY = "order.timeout.delay.queue";
+
     // ==================== 路由键 ====================
 
     public static final String RK_BID_PERSIST = "bid.persist";
@@ -40,4 +46,6 @@ public final class MqConstants {
     public static final String RK_AUCTION_SETTLE = "auction.settle";
     public static final String RK_AUCTION_WON = "auction.won";
     public static final String RK_AUCTION_DELAY = "auction.delay";
+    public static final String RK_ORDER_TIMEOUT = "order.timeout";
+    public static final String RK_ORDER_TIMEOUT_DELAY = "order.timeout.delay";
 }

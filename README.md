@@ -24,7 +24,7 @@
 | Day 19 | 通知体系 | 已完成 | `NotifyService`策略模式、站内信表、`BidOutbidConsumer`、`AuctionWonConsumer`、WebSocket个人通知 |
 | Day 20 | 订单创建与查询 | 已完成 | `biz_order`、成交生成待支付订单、买家/卖家订单列表、订单详情 |
 | Day 21 | 钱包 + 保证金账本 | 已完成 | `biz_wallet`、`biz_wallet_transaction`、管理员调账、个人流水、出价冻结、结算解冻/抵扣 |
-| Day 22 | 模拟支付 | 已完成 | `biz_payment`、钱包扣款支付、支付流水幂等、订单待支付推进到已支付 |
+| Day 22 | 模拟支付 | 已完成 | `biz_payment`、钱包扣款支付、支付流水幂等、订单待支付推进到已支付、支付超时自动关闭 |
 
 ## 技术栈
 
@@ -470,6 +470,7 @@ Authorization: Bearer <token>
 | `81be310` | Day 20：订单创建与查询（成交生成待支付订单 + 买家/卖家查询） |
 | `737ab2b` | Day 21：钱包 + 保证金账本（主表流水双写 + 保证金冻结/解冻/抵扣） |
 | `6367a1b` | Day 22：模拟支付（支付流水 + 钱包扣款 + 订单状态推进） |
+| `本次提交` | Day 22 补充：订单支付超时延迟关闭 |
 
 ## WebSocket 使用说明
 

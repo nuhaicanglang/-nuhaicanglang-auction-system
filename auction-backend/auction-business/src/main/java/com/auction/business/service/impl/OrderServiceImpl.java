@@ -8,16 +8,21 @@ import com.auction.business.service.OrderService;
 import com.auction.business.vo.OrderVO;
 import com.auction.common.exception.BizException;
 import com.auction.common.util.SnowflakeIdWorker;
+import com.auction.mq.constant.MqConstants;
+import com.auction.mq.message.OrderTimeoutMessage;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.core.MessagePostProcessor;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Map;
@@ -36,6 +41,7 @@ public class OrderServiceImpl implements OrderService {
             1, "待支付", 2, "已支付", 3, "已发货", 4, "已完成", 5, "已取消", 6, "已关闭");
 
     private final BizOrderMapper orderMapper;
+    private final RabbitTemplate rabbitTemplate;
     private final SnowflakeIdWorker idWorker = new SnowflakeIdWorker();
 
     @Override
@@ -88,6 +94,7 @@ public class OrderServiceImpl implements OrderService {
 
         log.info("成交订单创建成功: orderId={}, itemId={}, buyerId={}, payAmount={}",
                 orderId, item.getId(), buyerId, payAmount);
+        sendOrderTimeoutMessage(order);
         return orderId;
     }
 
@@ -117,6 +124,44 @@ public class OrderServiceImpl implements OrderService {
             throw new BizException(50002, "无权查看该订单");
         }
         return toVO(order);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public boolean closeTimeoutOrder(Long orderId, Long expectedPayDeadlineMs) {
+        BizOrder order = orderMapper.selectById(orderId);
+        if (order == null) {
+            log.warn("订单超时关闭跳过: 订单不存在 orderId={}", orderId);
+            return false;
+        }
+        if (!Integer.valueOf(1).equals(order.getStatus())) {
+            log.info("订单超时关闭跳过: orderId={}, status={}", orderId, order.getStatus());
+            return false;
+        }
+        if (order.getPayDeadline() != null && expectedPayDeadlineMs != null) {
+            long actualDeadlineMs = order.getPayDeadline()
+                    .atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli();
+            if (actualDeadlineMs > expectedPayDeadlineMs + 5000) {
+                log.info("订单超时关闭跳过: orderId={}, actualDeadline={}, msgDeadline={}",
+                        orderId, actualDeadlineMs, expectedPayDeadlineMs);
+                return false;
+            }
+        }
+        if (order.getPayDeadline() != null && LocalDateTime.now().isBefore(order.getPayDeadline())) {
+            log.info("订单超时关闭跳过: orderId={} 未到支付截止时间", orderId);
+            return false;
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+        BizOrder update = new BizOrder();
+        update.setId(orderId);
+        update.setStatus(6);
+        update.setClosedAt(now);
+        update.setCloseReason("支付超时自动关闭");
+        update.setUpdatedAt(now);
+        orderMapper.updateById(update);
+        log.info("订单支付超时自动关闭: orderId={}, orderNo={}", orderId, order.getOrderNo());
+        return true;
     }
 
     private LambdaQueryWrapper<BizOrder> baseQuery(OrderQueryDTO query) {
@@ -162,5 +207,27 @@ public class OrderServiceImpl implements OrderService {
         String suffix = String.valueOf(orderId);
         suffix = suffix.substring(Math.max(0, suffix.length() - 8));
         return "OD" + ORDER_NO_TIME.format(now) + suffix;
+    }
+
+    private void sendOrderTimeoutMessage(BizOrder order) {
+        long ttlMs = Duration.between(LocalDateTime.now(), order.getPayDeadline()).toMillis();
+        if (ttlMs < 1000) {
+            ttlMs = 1000;
+        }
+        OrderTimeoutMessage msg = OrderTimeoutMessage.builder()
+                .orderId(order.getId())
+                .expectedPayDeadlineMs(order.getPayDeadline()
+                        .atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli())
+                .build();
+        String expiration = String.valueOf(ttlMs);
+        MessagePostProcessor ttlSetter = message -> {
+            message.getMessageProperties().setExpiration(expiration);
+            return message;
+        };
+        rabbitTemplate.convertAndSend(
+                MqConstants.EXCHANGE_DIRECT,
+                MqConstants.RK_ORDER_TIMEOUT_DELAY,
+                msg,
+                ttlSetter);
     }
 }
