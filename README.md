@@ -488,7 +488,7 @@ Authorization: Bearer <token>
 | `8ae1764` | Day 28：全面压测脚本与报告模板（bid/list/search stress scripts + REPORT-Day28） |
 | `a8bdf19` | Day 29：优化与容灾复核（slow SQL review + cache strategy + Redis/MQ failure drill docs） |
 | `96633c3` | Day 30：打包部署配置（Dockerfile + docker-compose + Nginx + deploy check） |
-| _pending_ | Day 31：最终联调与演示准备（smoke test + demo script + defense checklist） |
+| `9c97246` | Day 31：最终联调与演示准备（smoke test + demo script + defense checklist） |
 
 ## WebSocket 使用说明
 
