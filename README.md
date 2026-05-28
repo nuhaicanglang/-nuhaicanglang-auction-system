@@ -4,7 +4,7 @@
 
 ## 项目状态
 
-当前已完成到 **阶段 7 / Day 27：前端联调准备文档**。
+当前已完成到 **阶段 7 / Day 28：全面压测脚本与报告模板**。
 
 | 阶段 | 主题 | 状态 | 主要产出 |
 |---|---|---|---|
@@ -30,6 +30,7 @@
 | Day 25 | ES 搜索接口 + 搜索历史 | 已完成 | `/api/search/items` (bool + filter + highlight + 分面聚合)、`/api/search/suggest` (phrase_prefix 联想)、`/api/search/history` (Redis List 去重限长) |
 | Day 26 | 管理仪表盘 + 数据导出 | 已完成 | `/api/admin/stats/*` 概览/趋势/热门分类/TOP商品，EasyExcel 同步导出 orders/users/wallet，单次最多 5000 行 |
 | Day 27 | 前端联调准备 | 已完成(文档) | 当前仓库暂无前端工程，已补 `docs/10-Day27前端联调清单.md`，覆盖接口映射、鉴权/刷新 token、路由守卫、权限菜单、下载 blob、验收流程 |
+| Day 28 | 全面压测准备 | 已完成(脚本/模板) | 复用出价压测脚本，新增列表/搜索压测脚本与 `REPORT-Day28.md`，实测数据待完整环境启动后回填 |
 
 ## 技术栈
 
@@ -481,6 +482,7 @@ Authorization: Bearer <token>
 | `beffc43` | Day 25：ES 搜索接口 + 搜索历史（`/api/search/items` bool/filter/highlight/agg + `/api/search/suggest` + `/api/search/history` Redis List） |
 | `69519a9` | Day 26：管理仪表盘 + EasyExcel 导出（stats overview/trend/hot/top + orders/users/wallet xlsx） |
 | `7a2c08f` | Day 27：前端联调准备文档（`docs/10-Day27前端联调清单.md`） |
+| _pending_ | Day 28：全面压测脚本与报告模板（bid/list/search stress scripts + REPORT-Day28） |
 
 ## WebSocket 使用说明
 
@@ -517,12 +519,11 @@ client.activate();
 
 ## 下一步
 
-继续 **阶段 7 / Day 28：压测全面**：
+继续 **阶段 7 / Day 29：优化与容灾**：
 
-- 出价场景压测
-- 列表场景压测（缓存命中率）
-- 搜索场景压测
-- 输出 JMeter/脚本压测报告
+- 慢 SQL 整改
+- 缓存策略复核
+- Redis / MQ 等关键依赖故障演练
 
 ## README 维护约定
 
