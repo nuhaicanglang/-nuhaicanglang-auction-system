@@ -24,15 +24,19 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.AmqpException;
 import org.springframework.amqp.rabbit.connection.CorrelationData;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 
 /**
@@ -50,6 +54,8 @@ import java.util.List;
 @Slf4j
 @Service
 public class BidServiceImpl implements BidService {
+
+    private static final long MQ_CONFIRM_TIMEOUT_MS = 5000L;
 
     private final StringRedisTemplate redisTemplate;
     private final DefaultRedisScript<Long> bidScript;
@@ -161,11 +167,7 @@ public class BidServiceImpl implements BidService {
                 .clientIp(clientIp)
                 .clientRequestId(requestId)
                 .build();
-        rabbitTemplate.convertAndSend(
-                MqConstants.EXCHANGE_DIRECT,
-                MqConstants.RK_BID_PERSIST,
-                bidMsg,
-                new CorrelationData(requestId));
+        publishBidPersistMessage(bidMsg, requestId);
 
         log.info("出价成功: itemId={}, userId={}, price={}, bidId={}", itemId, userId, price, bidId);
 
@@ -339,11 +341,7 @@ public class BidServiceImpl implements BidService {
                 .clientIp(clientIp)
                 .clientRequestId(requestId)
                 .build();
-        rabbitTemplate.convertAndSend(
-                MqConstants.EXCHANGE_DIRECT,
-                MqConstants.RK_BID_PERSIST,
-                bidMsg,
-                new CorrelationData(requestId));
+        publishBidPersistMessage(bidMsg, requestId);
 
         // 4. 同步更新商品状态为已成交（一口价需立即生效）
         auctionItemService.lambdaUpdate()
@@ -393,6 +391,50 @@ public class BidServiceImpl implements BidService {
         if (frozenThisTime) {
             walletService.cancelBidDepositFreeze(userId, itemId, deposit, requestId);
         }
+    }
+
+    private void publishBidPersistMessage(BidMessage bidMsg, String requestId) {
+        try {
+            rabbitTemplate.invoke(operations -> {
+                operations.convertAndSend(
+                        MqConstants.EXCHANGE_DIRECT,
+                        MqConstants.RK_BID_PERSIST,
+                        bidMsg,
+                        new CorrelationData(requestId));
+                operations.waitForConfirmsOrDie(MQ_CONFIRM_TIMEOUT_MS);
+                return null;
+            });
+        } catch (AmqpException e) {
+            log.error("出价消息发布失败，降级同步落库: itemId={}, bidId={}, requestId={}",
+                    bidMsg.getItemId(), bidMsg.getBidId(), requestId, e);
+            persistBidFallback(bidMsg);
+        }
+    }
+
+    private void persistBidFallback(BidMessage msg) {
+        BizBid bid = new BizBid();
+        bid.setId(msg.getBidId());
+        bid.setItemId(msg.getItemId());
+        bid.setBidderId(msg.getBidderId());
+        bid.setBidPrice(msg.getBidPrice());
+        bid.setBidTime(LocalDateTime.ofInstant(
+                Instant.ofEpochMilli(msg.getBidTimeMs()), ZoneId.systemDefault()));
+        bid.setBidType(msg.getBidType());
+        bid.setStatus(1);
+        bid.setClientIp(msg.getClientIp());
+        bid.setClientRequestId(msg.getClientRequestId());
+        bid.setTenantId(0L);
+        try {
+            bidMapper.insert(bid);
+        } catch (DuplicateKeyException e) {
+            log.info("出价降级落库命中幂等记录: requestId={}", msg.getClientRequestId());
+            return;
+        }
+        auctionItemService.lambdaUpdate()
+                .eq(BizAuctionItem::getId, msg.getItemId())
+                .set(BizAuctionItem::getCurrentPrice, msg.getBidPrice())
+                .setSql("bid_count = bid_count + 1")
+                .update();
     }
 
     private BidVO toVO(BizBid bid) {

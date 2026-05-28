@@ -4,7 +4,7 @@ services:
     container_name: auction-mysql
     restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root123456}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?set MYSQL_ROOT_PASSWORD in deploy/.env}
       MYSQL_DATABASE: ${MYSQL_DATABASE:-auction}
       TZ: ${TZ:-Asia/Shanghai}
     ports:
@@ -18,7 +18,7 @@ services:
       - --character-set-server=utf8mb4
       - --collation-server=utf8mb4_0900_ai_ci
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p${MYSQL_ROOT_PASSWORD:-root123456}"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p${MYSQL_ROOT_PASSWORD:?set MYSQL_ROOT_PASSWORD in deploy/.env}"]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -49,7 +49,7 @@ services:
     restart: unless-stopped
     environment:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-admin}
-      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS:-admin123}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS:?set RABBITMQ_PASS in deploy/.env}
       TZ: ${TZ:-Asia/Shanghai}
     ports:
       - "5672:5672"
@@ -108,7 +108,7 @@ services:
     restart: unless-stopped
     environment:
       MINIO_ROOT_USER: ${MINIO_USER:-admin}
-      MINIO_ROOT_PASSWORD: ${MINIO_PASS:-admin123456}
+      MINIO_ROOT_PASSWORD: ${MINIO_PASS:?set MINIO_PASS in deploy/.env}
       TZ: ${TZ:-Asia/Shanghai}
     ports:
       - "9000:9000"
@@ -137,16 +137,16 @@ services:
       MYSQL_PORT: 3306
       MYSQL_DATABASE: ${MYSQL_DATABASE:-auction}
       MYSQL_USER: ${MYSQL_USER:-root}
-      MYSQL_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root123456}
+      MYSQL_PASSWORD: ${MYSQL_ROOT_PASSWORD:?set MYSQL_ROOT_PASSWORD in deploy/.env}
       REDIS_HOST: redis
       REDIS_PORT: 6379
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_PORT: 5672
       RABBITMQ_USER: ${RABBITMQ_USER:-admin}
-      RABBITMQ_PASS: ${RABBITMQ_PASS:-admin123}
+      RABBITMQ_PASS: ${RABBITMQ_PASS:?set RABBITMQ_PASS in deploy/.env}
       ES_HOST: elasticsearch
       ES_PORT: 9200
-      JWT_SECRET: ${JWT_SECRET:-auction-prod-jwt-secret-change-me-change-me-change-me-2026}
+      JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET in deploy/.env}
       JWT_EXPIRE_SECONDS: ${JWT_EXPIRE_SECONDS:-7200}
       JAVA_OPTS: ${JAVA_OPTS:--Xms512m -Xmx1024m}
     ports:

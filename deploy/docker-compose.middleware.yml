@@ -35,6 +35,51 @@ services:
     networks:
       - auction-net
 
+  # RabbitMQ 承载出价异步落库、通知、订单超时和拍卖结算等消息。
+  rabbitmq:
+    image: rabbitmq:3.12-management
+    container_name: auction-rabbitmq
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-admin}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS:-admin123}
+      TZ: ${TZ:-Asia/Shanghai}
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - ./rabbitmq/data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - auction-net
+
+  # Elasticsearch 支撑商品搜索、联想词和聚合统计。
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.3
+    container_name: auction-es
+    restart: unless-stopped
+    environment:
+      discovery.type: single-node
+      xpack.security.enabled: "false"
+      ES_JAVA_OPTS: -Xms512m -Xmx512m
+      TZ: ${TZ:-Asia/Shanghai}
+    ports:
+      - "9200:9200"
+    volumes:
+      - ./elasticsearch/data:/usr/share/elasticsearch/data
+      - ./elasticsearch/plugins:/usr/share/elasticsearch/plugins
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:9200 >/dev/null || exit 1"]
+      interval: 20s
+      timeout: 10s
+      retries: 15
+    networks:
+      - auction-net
+
 networks:
   # 独立网络让中间件容器之间可以互相通信，也避免污染默认网络。
   auction-net:
