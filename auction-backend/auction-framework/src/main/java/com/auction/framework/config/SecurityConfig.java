@@ -63,6 +63,7 @@ public class SecurityConfig {
                                 "/api/ws/**"   // WebSocket/SockJS 握手端点，鉴权由 JwtHandshakeInterceptor 完成
                         ).permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/items", "/api/items/*", "/api/items/*/bids").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/search/items", "/api/search/suggest").permitAll()
                         .anyRequest().authenticated())
                 .exceptionHandling(exception -> exception
                         .authenticationEntryPoint((request, response, authException) ->

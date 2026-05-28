@@ -39,4 +39,9 @@ public final class RedisKey {
     public static String creditDaily(Long userId, String date) {
         return "credit:daily:" + userId + ":" + date;
     }
+
+    /** 用户搜索历史：search:history:{userId} */
+    public static String searchHistory(Long userId) {
+        return "search:history:" + userId;
+    }
 }

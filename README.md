@@ -4,7 +4,7 @@
 
 ## 项目状态
 
-当前已完成到 **阶段 6 / Day 24：ES 索引与同步**。
+当前已完成到 **阶段 6 / Day 25：ES 搜索接口 + 搜索历史**。
 
 | 阶段 | 主题 | 状态 | 主要产出 |
 |---|---|---|---|
@@ -27,6 +27,7 @@
 | Day 22 | 模拟支付 | 已完成 | `biz_payment`、钱包扣款支付、支付流水幂等、订单待支付推进到已支付、支付超时自动关闭 |
 | Day 23 | 评价 + 信用分 | 已完成 | `biz_review`、`biz_credit`、`biz_credit_log`、`CreditService` 事件应用、MQ 事件驱动、每日加分限额、信用低于30分自动禁用、每月信用恢复定时任务 |
 | Day 24 | ES 索引与同步 | 已完成 | `ItemDoc`(`auction_items` 索引 + ik 中文分词)、`ItemDocRepository`、`EsInitRunner` 启动全量同步、`EsSyncConsumer` 消费 `item.sync.queue` 增量同步、商品状态/价格/出价数变更触发 UPSERT、下架触发 DELETE |
+| Day 25 | ES 搜索接口 + 搜索历史 | 已完成 | `/api/search/items` (bool + filter + highlight + 分面聚合)、`/api/search/suggest` (phrase_prefix 联想)、`/api/search/history` (Redis List 去重限长) |
 
 ## 技术栈
 
@@ -475,6 +476,7 @@ Authorization: Bearer <token>
 | `5594338` | Day 22 补充：订单支付超时延迟关闭 |
 | `fea6d17` | Day 23：评价 + 信用分体系（`biz_review` / `biz_credit` / `biz_credit_log` + MQ 事件驱动 + 定时恢复） |
 | `4b7b57a` | Day 24：ES 索引与同步（`ItemDoc` + ik 分词 + `EsSyncConsumer` + 启动全量同步 + MQ 增量同步） |
+| _pending_ | Day 25：ES 搜索接口 + 搜索历史（`/api/search/items` bool/filter/highlight/agg + `/api/search/suggest` + `/api/search/history` Redis List） |
 
 ## WebSocket 使用说明
 
@@ -511,11 +513,11 @@ client.activate();
 
 ## 下一步
 
-继续 **阶段 6 / Day 25：搜索接口**：
+继续 **阶段 6 / Day 26：管理仪表盘 + 数据导出**：
 
-- `/search/items`：bool query + filter + highlight + 分类聚合
-- `/search/suggest`：completion suggester
-- 搜索历史（Redis List）
+- `/api/admin/stats/overview`：今日新增/成交、趋势图、热门分类、TOP10商品
+- EasyExcel 同步导出：orders / users / wallet
+- ECharts 前端展示
 
 ## README 维护约定
 
