@@ -476,7 +476,7 @@ Authorization: Bearer <token>
 | `5594338` | Day 22 补充：订单支付超时延迟关闭 |
 | `fea6d17` | Day 23：评价 + 信用分体系（`biz_review` / `biz_credit` / `biz_credit_log` + MQ 事件驱动 + 定时恢复） |
 | `4b7b57a` | Day 24：ES 索引与同步（`ItemDoc` + ik 分词 + `EsSyncConsumer` + 启动全量同步 + MQ 增量同步） |
-| _pending_ | Day 25：ES 搜索接口 + 搜索历史（`/api/search/items` bool/filter/highlight/agg + `/api/search/suggest` + `/api/search/history` Redis List） |
+| `beffc43` | Day 25：ES 搜索接口 + 搜索历史（`/api/search/items` bool/filter/highlight/agg + `/api/search/suggest` + `/api/search/history` Redis List） |
 
 ## WebSocket 使用说明
 
