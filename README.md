@@ -4,7 +4,7 @@
 
 ## 项目状态
 
-当前已完成到 **阶段 7 / Day 29：优化与容灾复核**。
+当前已完成到 **阶段 7 / Day 30：打包部署配置**。
 
 | 阶段 | 主题 | 状态 | 主要产出 |
 |---|---|---|---|
@@ -32,6 +32,7 @@
 | Day 27 | 前端联调准备 | 已完成(文档) | 当前仓库暂无前端工程，已补 `docs/10-Day27前端联调清单.md`，覆盖接口映射、鉴权/刷新 token、路由守卫、权限菜单、下载 blob、验收流程 |
 | Day 28 | 全面压测准备 | 已完成(脚本/模板) | 复用出价压测脚本，新增列表/搜索压测脚本与 `REPORT-Day28.md`，实测数据待完整环境启动后回填 |
 | Day 29 | 优化与容灾复核 | 已完成(文档/脚本) | 慢 SQL EXPLAIN 复核脚本、缓存 Key/策略清单、Redis/RabbitMQ 故障演练步骤，实际停机演练待开发环境确认后执行 |
+| Day 30 | 打包部署配置 | 已完成(配置/脚本) | 后端 Dockerfile、prod 配置、完整 docker-compose、Nginx 反代、部署校验脚本，实际 `up -d --build` 待执行 |
 
 ## 技术栈
 
@@ -485,6 +486,7 @@ Authorization: Bearer <token>
 | `7a2c08f` | Day 27：前端联调准备文档（`docs/10-Day27前端联调清单.md`） |
 | `8ae1764` | Day 28：全面压测脚本与报告模板（bid/list/search stress scripts + REPORT-Day28） |
 | `a8bdf19` | Day 29：优化与容灾复核（slow SQL review + cache strategy + Redis/MQ failure drill docs） |
+| _pending_ | Day 30：打包部署配置（Dockerfile + docker-compose + Nginx + deploy check） |
 
 ## WebSocket 使用说明
 
@@ -521,11 +523,11 @@ client.activate();
 
 ## 下一步
 
-继续 **阶段 7 / Day 30：打包部署**：
+继续 **阶段 7 / Day 31：最终联调与演示准备**：
 
-- Dockerfile 验证
-- `docker-compose up -d` 跑通整套
-- Nginx 反代 + 域名（可选）
+- 完整主流程冒烟测试
+- 回填压测/部署实际结果
+- 准备演示视频脚本与答辩材料
 
 ## README 维护约定
 

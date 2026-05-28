@@ -1,0 +1,33 @@
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Java / Maven
+**/target/
+*.log
+
+# Runtime uploads and logs
+uploads/
+logs/
+deploy/backend/logs/
+deploy/nginx/logs/
+
+# Docker data volumes
+deploy/mysql/data/
+deploy/redis/data/
+deploy/rabbitmq/data/
+deploy/elasticsearch/data/
+deploy/kibana/data/
+deploy/minio/data/
+
+# Local env files
+.env
+deploy/.env
+
+# Temporary files
+*.tmp
+*.bak
