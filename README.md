@@ -478,7 +478,7 @@ Authorization: Bearer <token>
 | `fea6d17` | Day 23：评价 + 信用分体系（`biz_review` / `biz_credit` / `biz_credit_log` + MQ 事件驱动 + 定时恢复） |
 | `4b7b57a` | Day 24：ES 索引与同步（`ItemDoc` + ik 分词 + `EsSyncConsumer` + 启动全量同步 + MQ 增量同步） |
 | `beffc43` | Day 25：ES 搜索接口 + 搜索历史（`/api/search/items` bool/filter/highlight/agg + `/api/search/suggest` + `/api/search/history` Redis List） |
-| _pending_ | Day 26：管理仪表盘 + EasyExcel 导出（stats overview/trend/hot/top + orders/users/wallet xlsx） |
+| `69519a9` | Day 26：管理仪表盘 + EasyExcel 导出（stats overview/trend/hot/top + orders/users/wallet xlsx） |
 
 ## WebSocket 使用说明
 
