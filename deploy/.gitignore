@@ -1,3 +1,10 @@
 .env
 mysql/data/
 redis/data/
+rabbitmq/data/
+elasticsearch/data/
+kibana/data/
+minio/data/
+backend/logs/
+backend/uploads/
+nginx/logs/

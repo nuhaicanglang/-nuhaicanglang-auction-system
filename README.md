@@ -4,7 +4,7 @@
 
 ## 项目状态
 
-当前已完成到 **阶段 7 / Day 30：打包部署配置**。
+当前已完成到 **阶段 7 / Day 31：最终联调与演示准备**。
 
 | 阶段 | 主题 | 状态 | 主要产出 |
 |---|---|---|---|
@@ -33,6 +33,7 @@
 | Day 28 | 全面压测准备 | 已完成(脚本/模板) | 复用出价压测脚本，新增列表/搜索压测脚本与 `REPORT-Day28.md`，实测数据待完整环境启动后回填 |
 | Day 29 | 优化与容灾复核 | 已完成(文档/脚本) | 慢 SQL EXPLAIN 复核脚本、缓存 Key/策略清单、Redis/RabbitMQ 故障演练步骤，实际停机演练待开发环境确认后执行 |
 | Day 30 | 打包部署配置 | 已完成(配置/脚本) | 后端 Dockerfile、prod 配置、完整 docker-compose、Nginx 反代、部署校验脚本，实际 `up -d --build` 待执行 |
+| Day 31 | 最终联调与演示准备 | 已完成(脚本/文档) | 最终冒烟测试脚本、演示视频脚本、答辩材料清单、最终验收 checklist |
 
 ## 技术栈
 
@@ -487,6 +488,7 @@ Authorization: Bearer <token>
 | `8ae1764` | Day 28：全面压测脚本与报告模板（bid/list/search stress scripts + REPORT-Day28） |
 | `a8bdf19` | Day 29：优化与容灾复核（slow SQL review + cache strategy + Redis/MQ failure drill docs） |
 | `96633c3` | Day 30：打包部署配置（Dockerfile + docker-compose + Nginx + deploy check） |
+| _pending_ | Day 31：最终联调与演示准备（smoke test + demo script + defense checklist） |
 
 ## WebSocket 使用说明
 
@@ -523,11 +525,11 @@ client.activate();
 
 ## 下一步
 
-继续 **阶段 7 / Day 31：最终联调与演示准备**：
+继续 **最终收尾**：
 
-- 完整主流程冒烟测试
+- 启动完整环境并执行冒烟测试
 - 回填压测/部署实际结果
-- 准备演示视频脚本与答辩材料
+- 录制 5~10 分钟演示视频
 
 ## README 维护约定
 
