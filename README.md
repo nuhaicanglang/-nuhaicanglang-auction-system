@@ -4,7 +4,7 @@
 
 ## 项目状态
 
-当前已完成到 **阶段 6 / Day 25：ES 搜索接口 + 搜索历史**。
+当前已完成到 **阶段 6 / Day 26：管理仪表盘 + 数据导出**。
 
 | 阶段 | 主题 | 状态 | 主要产出 |
 |---|---|---|---|
@@ -28,6 +28,7 @@
 | Day 23 | 评价 + 信用分 | 已完成 | `biz_review`、`biz_credit`、`biz_credit_log`、`CreditService` 事件应用、MQ 事件驱动、每日加分限额、信用低于30分自动禁用、每月信用恢复定时任务 |
 | Day 24 | ES 索引与同步 | 已完成 | `ItemDoc`(`auction_items` 索引 + ik 中文分词)、`ItemDocRepository`、`EsInitRunner` 启动全量同步、`EsSyncConsumer` 消费 `item.sync.queue` 增量同步、商品状态/价格/出价数变更触发 UPSERT、下架触发 DELETE |
 | Day 25 | ES 搜索接口 + 搜索历史 | 已完成 | `/api/search/items` (bool + filter + highlight + 分面聚合)、`/api/search/suggest` (phrase_prefix 联想)、`/api/search/history` (Redis List 去重限长) |
+| Day 26 | 管理仪表盘 + 数据导出 | 已完成 | `/api/admin/stats/*` 概览/趋势/热门分类/TOP商品，EasyExcel 同步导出 orders/users/wallet，单次最多 5000 行 |
 
 ## 技术栈
 
@@ -477,6 +478,7 @@ Authorization: Bearer <token>
 | `fea6d17` | Day 23：评价 + 信用分体系（`biz_review` / `biz_credit` / `biz_credit_log` + MQ 事件驱动 + 定时恢复） |
 | `4b7b57a` | Day 24：ES 索引与同步（`ItemDoc` + ik 分词 + `EsSyncConsumer` + 启动全量同步 + MQ 增量同步） |
 | `beffc43` | Day 25：ES 搜索接口 + 搜索历史（`/api/search/items` bool/filter/highlight/agg + `/api/search/suggest` + `/api/search/history` Redis List） |
+| _pending_ | Day 26：管理仪表盘 + EasyExcel 导出（stats overview/trend/hot/top + orders/users/wallet xlsx） |
 
 ## WebSocket 使用说明
 
@@ -513,11 +515,12 @@ client.activate();
 
 ## 下一步
 
-继续 **阶段 6 / Day 26：管理仪表盘 + 数据导出**：
+继续 **阶段 7 / Day 27：前端联调收尾**：
 
-- `/api/admin/stats/overview`：今日新增/成交、趋势图、热门分类、TOP10商品
-- EasyExcel 同步导出：orders / users / wallet
-- ECharts 前端展示
+- 所有页面对接真实接口
+- 全局加载/错误提示
+- 路由守卫、权限菜单
+- 静默刷新 token
 
 ## README 维护约定
 
