@@ -486,7 +486,7 @@ Authorization: Bearer <token>
 | `7a2c08f` | Day 27：前端联调准备文档（`docs/10-Day27前端联调清单.md`） |
 | `8ae1764` | Day 28：全面压测脚本与报告模板（bid/list/search stress scripts + REPORT-Day28） |
 | `a8bdf19` | Day 29：优化与容灾复核（slow SQL review + cache strategy + Redis/MQ failure drill docs） |
-| _pending_ | Day 30：打包部署配置（Dockerfile + docker-compose + Nginx + deploy check） |
+| `96633c3` | Day 30：打包部署配置（Dockerfile + docker-compose + Nginx + deploy check） |
 
 ## WebSocket 使用说明
 
