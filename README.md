@@ -480,7 +480,7 @@ Authorization: Bearer <token>
 | `4b7b57a` | Day 24：ES 索引与同步（`ItemDoc` + ik 分词 + `EsSyncConsumer` + 启动全量同步 + MQ 增量同步） |
 | `beffc43` | Day 25：ES 搜索接口 + 搜索历史（`/api/search/items` bool/filter/highlight/agg + `/api/search/suggest` + `/api/search/history` Redis List） |
 | `69519a9` | Day 26：管理仪表盘 + EasyExcel 导出（stats overview/trend/hot/top + orders/users/wallet xlsx） |
-| _pending_ | Day 27：前端联调准备文档（`docs/10-Day27前端联调清单.md`） |
+| `7a2c08f` | Day 27：前端联调准备文档（`docs/10-Day27前端联调清单.md`） |
 
 ## WebSocket 使用说明
 
