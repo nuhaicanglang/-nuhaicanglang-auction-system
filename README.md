@@ -4,7 +4,7 @@
 
 ## 项目状态
 
-当前已完成到 **阶段 6 / Day 26：管理仪表盘 + 数据导出**。
+当前已完成到 **阶段 7 / Day 27：前端联调准备文档**。
 
 | 阶段 | 主题 | 状态 | 主要产出 |
 |---|---|---|---|
@@ -29,6 +29,7 @@
 | Day 24 | ES 索引与同步 | 已完成 | `ItemDoc`(`auction_items` 索引 + ik 中文分词)、`ItemDocRepository`、`EsInitRunner` 启动全量同步、`EsSyncConsumer` 消费 `item.sync.queue` 增量同步、商品状态/价格/出价数变更触发 UPSERT、下架触发 DELETE |
 | Day 25 | ES 搜索接口 + 搜索历史 | 已完成 | `/api/search/items` (bool + filter + highlight + 分面聚合)、`/api/search/suggest` (phrase_prefix 联想)、`/api/search/history` (Redis List 去重限长) |
 | Day 26 | 管理仪表盘 + 数据导出 | 已完成 | `/api/admin/stats/*` 概览/趋势/热门分类/TOP商品，EasyExcel 同步导出 orders/users/wallet，单次最多 5000 行 |
+| Day 27 | 前端联调准备 | 已完成(文档) | 当前仓库暂无前端工程，已补 `docs/10-Day27前端联调清单.md`，覆盖接口映射、鉴权/刷新 token、路由守卫、权限菜单、下载 blob、验收流程 |
 
 ## 技术栈
 
@@ -479,6 +480,7 @@ Authorization: Bearer <token>
 | `4b7b57a` | Day 24：ES 索引与同步（`ItemDoc` + ik 分词 + `EsSyncConsumer` + 启动全量同步 + MQ 增量同步） |
 | `beffc43` | Day 25：ES 搜索接口 + 搜索历史（`/api/search/items` bool/filter/highlight/agg + `/api/search/suggest` + `/api/search/history` Redis List） |
 | `69519a9` | Day 26：管理仪表盘 + EasyExcel 导出（stats overview/trend/hot/top + orders/users/wallet xlsx） |
+| _pending_ | Day 27：前端联调准备文档（`docs/10-Day27前端联调清单.md`） |
 
 ## WebSocket 使用说明
 
@@ -515,12 +517,12 @@ client.activate();
 
 ## 下一步
 
-继续 **阶段 7 / Day 27：前端联调收尾**：
+继续 **阶段 7 / Day 28：压测全面**：
 
-- 所有页面对接真实接口
-- 全局加载/错误提示
-- 路由守卫、权限菜单
-- 静默刷新 token
+- 出价场景压测
+- 列表场景压测（缓存命中率）
+- 搜索场景压测
+- 输出 JMeter/脚本压测报告
 
 ## README 维护约定
 
