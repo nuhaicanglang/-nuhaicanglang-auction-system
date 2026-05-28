@@ -4,7 +4,7 @@
 
 ## 项目状态
 
-当前已完成到 **阶段 7 / Day 28：全面压测脚本与报告模板**。
+当前已完成到 **阶段 7 / Day 29：优化与容灾复核**。
 
 | 阶段 | 主题 | 状态 | 主要产出 |
 |---|---|---|---|
@@ -31,6 +31,7 @@
 | Day 26 | 管理仪表盘 + 数据导出 | 已完成 | `/api/admin/stats/*` 概览/趋势/热门分类/TOP商品，EasyExcel 同步导出 orders/users/wallet，单次最多 5000 行 |
 | Day 27 | 前端联调准备 | 已完成(文档) | 当前仓库暂无前端工程，已补 `docs/10-Day27前端联调清单.md`，覆盖接口映射、鉴权/刷新 token、路由守卫、权限菜单、下载 blob、验收流程 |
 | Day 28 | 全面压测准备 | 已完成(脚本/模板) | 复用出价压测脚本，新增列表/搜索压测脚本与 `REPORT-Day28.md`，实测数据待完整环境启动后回填 |
+| Day 29 | 优化与容灾复核 | 已完成(文档/脚本) | 慢 SQL EXPLAIN 复核脚本、缓存 Key/策略清单、Redis/RabbitMQ 故障演练步骤，实际停机演练待开发环境确认后执行 |
 
 ## 技术栈
 
@@ -483,6 +484,7 @@ Authorization: Bearer <token>
 | `69519a9` | Day 26：管理仪表盘 + EasyExcel 导出（stats overview/trend/hot/top + orders/users/wallet xlsx） |
 | `7a2c08f` | Day 27：前端联调准备文档（`docs/10-Day27前端联调清单.md`） |
 | `8ae1764` | Day 28：全面压测脚本与报告模板（bid/list/search stress scripts + REPORT-Day28） |
+| _pending_ | Day 29：优化与容灾复核（slow SQL review + cache strategy + Redis/MQ failure drill docs） |
 
 ## WebSocket 使用说明
 
@@ -519,11 +521,11 @@ client.activate();
 
 ## 下一步
 
-继续 **阶段 7 / Day 29：优化与容灾**：
+继续 **阶段 7 / Day 30：打包部署**：
 
-- 慢 SQL 整改
-- 缓存策略复核
-- Redis / MQ 等关键依赖故障演练
+- Dockerfile 验证
+- `docker-compose up -d` 跑通整套
+- Nginx 反代 + 域名（可选）
 
 ## README 维护约定
 

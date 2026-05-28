@@ -95,7 +95,7 @@ powershell -ExecutionPolicy Bypass -File test/stress/stress-list.ps1 `
 脚本会并发请求：
 
 ```http
-GET /api/items?page={1~10}&size=10&status={2|3}&sort={createdAt|currentPrice}
+GET /api/items?page={1~10}&size=10&status={2|3}&sort={created_at|current_price}
 ```
 
 关注点：

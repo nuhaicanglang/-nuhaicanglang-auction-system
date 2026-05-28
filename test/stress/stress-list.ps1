@@ -38,8 +38,8 @@ while ($sent -lt $TotalRequests) {
         $page = (($seq - 1) % 10) + 1
         $status = 3
         if ($seq % 5 -eq 0) { $status = 2 }
-        $sort = "createdAt"
-        if ($seq % 3 -eq 0) { $sort = "currentPrice" }
+        $sort = "created_at"
+        if ($seq % 3 -eq 0) { $sort = "current_price" }
         $url = "$BaseUrl/api/items?page=$page&size=$PageSize&status=$status&sort=$sort"
 
         $msg = New-Object System.Net.Http.HttpRequestMessage([System.Net.Http.HttpMethod]::Get, $url)
