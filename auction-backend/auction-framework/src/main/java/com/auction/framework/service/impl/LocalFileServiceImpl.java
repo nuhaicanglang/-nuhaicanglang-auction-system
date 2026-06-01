@@ -10,6 +10,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Locale;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.UUID;
@@ -44,17 +45,14 @@ public class LocalFileServiceImpl implements FileService {
 
     @Override
     public String upload(MultipartFile file, String biz) {
-        String originalName = file.getOriginalFilename();
-        String ext = "";
-        if (originalName != null && originalName.contains(".")) {
-            ext = originalName.substring(originalName.lastIndexOf("."));
-        }
+        String safeBiz = sanitizeBiz(biz);
+        String ext = extensionFor(file);
 
         String datePath = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
         String fileName = UUID.randomUUID().toString().replace("-", "") + ext;
-        String relativePath = biz + "/" + datePath + "/" + fileName;
+        String relativePath = safeBiz + "/" + datePath + "/" + fileName;
 
-        File dest = new File(baseDir, relativePath);
+        File dest = resolveInsideBase(relativePath);
         if (!dest.getParentFile().exists() && !dest.getParentFile().mkdirs()) {
             throw new BizException(99999, "创建上传目录失败");
         }
@@ -75,9 +73,44 @@ public class LocalFileServiceImpl implements FileService {
             return;
         }
         String relativePath = fileUrl.substring(properties.getLocalUrlPrefix().length() + 1);
-        File file = new File(properties.getLocalPath(), relativePath);
+        File file = resolveInsideBase(relativePath);
         if (file.exists() && !file.delete()) {
             log.warn("删除文件失败: {}", file.getAbsolutePath());
+        }
+    }
+
+    private String sanitizeBiz(String biz) {
+        String value = (biz == null || biz.isBlank()) ? "item" : biz.trim();
+        if (!value.matches("[A-Za-z0-9_-]{1,32}")) {
+            throw new BizException(10001, "业务目录参数不合法");
+        }
+        return value;
+    }
+
+    private String extensionFor(MultipartFile file) {
+        String contentType = file.getContentType();
+        if (contentType == null) {
+            throw new BizException(10001, "文件类型不能为空");
+        }
+        return switch (contentType.toLowerCase(Locale.ROOT)) {
+            case "image/jpeg", "image/jpg" -> ".jpg";
+            case "image/png" -> ".png";
+            case "image/gif" -> ".gif";
+            case "image/webp" -> ".webp";
+            default -> throw new BizException(10001, "不支持的图片类型");
+        };
+    }
+
+    private File resolveInsideBase(String relativePath) {
+        try {
+            File dest = new File(baseDir, relativePath).getCanonicalFile();
+            String basePath = baseDir.getCanonicalPath() + File.separator;
+            if (!dest.getPath().startsWith(basePath)) {
+                throw new BizException(10001, "文件路径不合法");
+            }
+            return dest;
+        } catch (IOException e) {
+            throw new BizException(99999, "解析上传路径失败");
         }
     }
 }

@@ -185,6 +185,8 @@ public class AuctionItemServiceImpl extends ServiceImpl<BizAuctionItemMapper, Bi
         }
         if (query.getStatus() != null) {
             wrapper.eq(BizAuctionItem::getStatus, query.getStatus());
+        } else if (query.getSellerId() == null) {
+            wrapper.in(BizAuctionItem::getStatus, 2, 3, 4, 5, 6);
         }
         if (query.getPriceMin() != null) {
             wrapper.ge(BizAuctionItem::getCurrentPrice, query.getPriceMin());
@@ -227,6 +229,12 @@ public class AuctionItemServiceImpl extends ServiceImpl<BizAuctionItemMapper, Bi
     public AuctionItemVO getItemDetail(Long id) {
         BizAuctionItem item = getById(id);
         if (item == null) {
+            throw new BizException(30003, "商品不存在");
+        }
+        if (item.getDeleted() != null && item.getDeleted() == 1
+                || item.getStatus() == null
+                || item.getStatus() < 2
+                || item.getStatus() == 7) {
             throw new BizException(30003, "商品不存在");
         }
 

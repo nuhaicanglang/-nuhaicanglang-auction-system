@@ -218,6 +218,7 @@ public class BidServiceImpl implements BidService {
             auctionItemService.lambdaUpdate()
                     .eq(BizAuctionItem::getId, itemId)
                     .set(BizAuctionItem::getStatus, 5)   // 5=已成交
+                    .set(BizAuctionItem::getCurrentPrice, price)
                     .set(BizAuctionItem::getWinnerId, userId)
                     .set(BizAuctionItem::getFinalPrice, price)
                     .set(BizAuctionItem::getActualEndTime, LocalDateTime.now())

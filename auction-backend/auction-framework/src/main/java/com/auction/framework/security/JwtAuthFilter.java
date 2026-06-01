@@ -8,6 +8,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
@@ -37,6 +38,8 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
     private final JwtBlacklistService jwtBlacklistService;
 
+    private final ObjectProvider<AccountStatusChecker> accountStatusCheckerProvider;
+
     /**
      * 解析 token 并建立 Spring Security 登录态；没有 token 的请求交给后续授权规则判断是否允许访问。
      * 增加黑名单检查：登出后的 token 不再有效。
@@ -55,6 +58,13 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                 Claims claims = jwtTokenProvider.parseClaims(token);
                 Long userId = Long.valueOf(claims.getSubject());
                 String username = claims.get("username", String.class);
+
+                AccountStatusChecker accountStatusChecker = accountStatusCheckerProvider.getIfAvailable();
+                if (accountStatusChecker != null && !accountStatusChecker.isActive(userId)) {
+                    SecurityContextHolder.clearContext();
+                    filterChain.doFilter(request, response);
+                    return;
+                }
 
                 // 从 JWT claims 中读取角色列表，转换为 Spring Security 的 GrantedAuthority
                 @SuppressWarnings("unchecked")

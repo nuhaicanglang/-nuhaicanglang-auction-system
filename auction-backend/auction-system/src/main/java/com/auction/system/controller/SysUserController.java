@@ -147,6 +147,12 @@ public class SysUserController {
             if (user == null) {
                 throw new BizException(ErrorCode.USER_NOT_FOUND);
             }
+            if (Integer.valueOf(0).equals(user.getStatus())) {
+                throw new BizException(ErrorCode.USER_DISABLED);
+            }
+            if (Integer.valueOf(2).equals(user.getStatus())) {
+                throw new BizException(ErrorCode.USER_BLACKLISTED);
+            }
 
             List<String> roleCodes = sysRoleMapper.selectRolesByUserId(userId)
                     .stream().map(SysRole::getCode).collect(Collectors.toList());

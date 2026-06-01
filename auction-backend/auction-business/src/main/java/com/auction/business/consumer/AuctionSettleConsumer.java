@@ -21,10 +21,15 @@ import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.support.AmqpHeaders;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.messaging.handler.annotation.Header;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.List;
 
 /**
  * 拍卖结算消费者：监听 auction.settle.queue（延迟队列到期后由 DLX 路由到此）。
@@ -87,6 +92,7 @@ public class AuctionSettleConsumer {
             }
 
             // 4. 查询最高有效出价
+            syncPendingBidsFromRedis(itemId);
             BizBid topBid = bidMapper.selectOne(
                     new LambdaQueryWrapper<BizBid>()
                             .eq(BizBid::getItemId, itemId)
@@ -101,6 +107,7 @@ public class AuctionSettleConsumer {
                 auctionItemService.lambdaUpdate()
                         .eq(BizAuctionItem::getId, itemId)
                         .set(BizAuctionItem::getStatus, 5)          // 已成交
+                        .set(BizAuctionItem::getCurrentPrice, topBid.getBidPrice())
                         .set(BizAuctionItem::getWinnerId, topBid.getBidderId())
                         .set(BizAuctionItem::getFinalPrice, topBid.getBidPrice())
                         .set(BizAuctionItem::getActualEndTime, now)
@@ -150,5 +157,81 @@ public class AuctionSettleConsumer {
             log.error("结算异常: itemId={}, error={}", itemId, e.getMessage(), e);
             channel.basicNack(deliveryTag, false, false);
         }
+    }
+
+    /**
+     * Lua 出价成功后先写 Redis 队列，再通过 MQ 异步落库。结算发生在边界时，
+     * MQ 可能还没有消费完，因此这里先把 Redis 队列中的未落库出价补写进 MySQL。
+     */
+    private void syncPendingBidsFromRedis(Long itemId) {
+        List<String> payloads = redisTemplate.opsForList().range(RedisKey.bidQueue(itemId), 0, 999);
+        if (payloads == null || payloads.isEmpty()) {
+            return;
+        }
+        int inserted = 0;
+        for (String payload : payloads) {
+            PendingBid pending = parsePendingBid(itemId, payload);
+            if (pending == null) {
+                continue;
+            }
+            BizBid exists = bidMapper.selectOne(new LambdaQueryWrapper<BizBid>()
+                    .eq(BizBid::getClientRequestId, pending.requestId())
+                    .last("LIMIT 1"));
+            if (exists != null) {
+                continue;
+            }
+
+            BizBid bid = new BizBid();
+            bid.setId(pending.bidId());
+            bid.setItemId(itemId);
+            bid.setBidderId(pending.userId());
+            bid.setBidPrice(pending.price());
+            bid.setBidTime(LocalDateTime.ofInstant(
+                    Instant.ofEpochMilli(pending.bidTimeMs()), ZoneId.systemDefault()));
+            bid.setBidType(1);
+            bid.setStatus(1);
+            bid.setClientRequestId(pending.requestId());
+            bid.setTenantId(0L);
+            bid.setCreatedAt(LocalDateTime.now());
+            try {
+                bidMapper.insert(bid);
+                inserted++;
+            } catch (DuplicateKeyException e) {
+                log.debug("结算补写出价命中幂等: itemId={}, requestId={}", itemId, pending.requestId());
+            }
+        }
+        if (inserted > 0) {
+            auctionItemService.lambdaUpdate()
+                    .eq(BizAuctionItem::getId, itemId)
+                    .setSql("bid_count = bid_count + " + inserted)
+                    .update();
+            log.info("结算前补写 Redis 出价完成: itemId={}, inserted={}", itemId, inserted);
+        }
+    }
+
+    private PendingBid parsePendingBid(Long itemId, String payload) {
+        if (payload == null || payload.isBlank()) {
+            return null;
+        }
+        String[] parts = payload.split("\\|");
+        if (parts.length < 5) {
+            log.warn("Redis 出价队列 payload 格式异常: itemId={}, payload={}", itemId, payload);
+            return null;
+        }
+        try {
+            return new PendingBid(
+                    Long.valueOf(parts[0]),
+                    Long.valueOf(parts[1]),
+                    new BigDecimal(parts[2]),
+                    Long.parseLong(parts[3]),
+                    parts[4]
+            );
+        } catch (RuntimeException e) {
+            log.warn("Redis 出价队列 payload 解析失败: itemId={}, payload={}", itemId, payload);
+            return null;
+        }
+    }
+
+    private record PendingBid(Long bidId, Long userId, BigDecimal price, Long bidTimeMs, String requestId) {
     }
 }

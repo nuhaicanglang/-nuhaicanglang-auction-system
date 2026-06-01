@@ -12,6 +12,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.Locale;
 import java.util.UUID;
 
 /**
@@ -60,14 +61,11 @@ public class MinioFileServiceImpl implements FileService {
 
     @Override
     public String upload(MultipartFile file, String biz) {
-        String originalName = file.getOriginalFilename();
-        String ext = "";
-        if (originalName != null && originalName.contains(".")) {
-            ext = originalName.substring(originalName.lastIndexOf("."));
-        }
+        String safeBiz = sanitizeBiz(biz);
+        String ext = extensionFor(file);
 
         String datePath = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-        String objectName = biz + "/" + datePath + "/" + UUID.randomUUID().toString().replace("-", "") + ext;
+        String objectName = safeBiz + "/" + datePath + "/" + UUID.randomUUID().toString().replace("-", "") + ext;
 
         try {
             minioClient.putObject(PutObjectArgs.builder()
@@ -100,5 +98,27 @@ public class MinioFileServiceImpl implements FileService {
         } catch (Exception e) {
             log.warn("MinIO 删除失败: {}", objectName, e);
         }
+    }
+
+    private String sanitizeBiz(String biz) {
+        String value = (biz == null || biz.isBlank()) ? "item" : biz.trim();
+        if (!value.matches("[A-Za-z0-9_-]{1,32}")) {
+            throw new BizException(10001, "业务目录参数不合法");
+        }
+        return value;
+    }
+
+    private String extensionFor(MultipartFile file) {
+        String contentType = file.getContentType();
+        if (contentType == null) {
+            throw new BizException(10001, "文件类型不能为空");
+        }
+        return switch (contentType.toLowerCase(Locale.ROOT)) {
+            case "image/jpeg", "image/jpg" -> ".jpg";
+            case "image/png" -> ".png";
+            case "image/gif" -> ".gif";
+            case "image/webp" -> ".webp";
+            default -> throw new BizException(10001, "不支持的图片类型");
+        };
     }
 }

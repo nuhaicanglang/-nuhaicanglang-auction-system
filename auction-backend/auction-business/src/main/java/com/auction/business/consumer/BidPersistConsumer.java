@@ -83,6 +83,14 @@ public class BidPersistConsumer {
                 return;
             }
 
+            BizAuctionItem item = auctionItemService.getById(msg.getItemId());
+            if (item == null || !Integer.valueOf(3).equals(item.getStatus())) {
+                log.info("出价补充落库完成，商品已非拍卖中，跳过价格回写: itemId={}, bidId={}",
+                        msg.getItemId(), msg.getBidId());
+                channel.basicAck(deliveryTag, false);
+                return;
+            }
+
             // 2. 累加 bid_count、更新 current_price（以 Redis 为准，但 DB 记录审计）
             auctionItemService.lambdaUpdate()
                     .eq(BizAuctionItem::getId, msg.getItemId())
@@ -91,7 +99,6 @@ public class BidPersistConsumer {
                     .update();
 
             if (previousTopBid != null && msg.getBidPrice().compareTo(previousTopBid.getBidPrice()) > 0) {
-                BizAuctionItem item = auctionItemService.getById(msg.getItemId());
                 BidOutbidMessage outbidMsg = BidOutbidMessage.builder()
                         .itemId(msg.getItemId())
                         .itemTitle(item != null ? item.getTitle() : String.valueOf(msg.getItemId()))

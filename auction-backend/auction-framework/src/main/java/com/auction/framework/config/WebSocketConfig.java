@@ -3,10 +3,17 @@ package com.auction.framework.config;
 import com.auction.framework.websocket.JwtHandshakeInterceptor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
+import org.springframework.util.StringUtils;
+import org.springframework.web.socket.WebSocketHandler;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
+import org.springframework.web.socket.server.support.DefaultHandshakeHandler;
+
+import java.security.Principal;
+import java.util.Map;
 
 /**
  * WebSocket + STOMP 配置。
@@ -34,6 +41,18 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint("/api/ws")
                 .addInterceptors(jwtHandshakeInterceptor)
+                .setHandshakeHandler(new DefaultHandshakeHandler() {
+                    @Override
+                    protected Principal determineUser(ServerHttpRequest request,
+                                                      WebSocketHandler wsHandler,
+                                                      Map<String, Object> attributes) {
+                        String username = (String) attributes.get("username");
+                        if (StringUtils.hasText(username)) {
+                            return () -> username;
+                        }
+                        return super.determineUser(request, wsHandler, attributes);
+                    }
+                })
                 .setAllowedOriginPatterns("*")
                 .withSockJS(); // 兼容不支持原生 WebSocket 的旧浏览器
     }
