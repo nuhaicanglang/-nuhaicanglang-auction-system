@@ -98,9 +98,8 @@
 大作业/
 ├── README.md
 ├── docs/                         # 需求、架构、数据库、接口、关键方案、里程碑
-├── deploy/                       # Docker 中间件、完整部署与 Nginx 配置
+├── deploy/                       # Docker 中间件与 MySQL/Redis 配置
 │   ├── docker-compose.middleware.yml
-│   ├── docker-compose.yml
 │   ├── mysql/
 │   └── redis/
 └── auction-backend/              # Spring Boot 多模块后端
@@ -118,7 +117,7 @@
 
 > 所有命令以 Windows PowerShell 为例。
 
-### 1. 启动本地开发中间件
+### 1. 启动中间件
 
 ```powershell
 docker compose -f deploy/docker-compose.middleware.yml up -d
@@ -128,17 +127,7 @@ docker compose -f deploy/docker-compose.middleware.yml up -d
 
 - **MySQL**：`localhost:3306`，数据库 `auction`，root 密码 `root123456`
 - **Redis**：`localhost:6379`
-- **RabbitMQ**：`localhost:5672`，管理端 `http://localhost:15672`
-- **Elasticsearch**：`http://localhost:9200`
-
-> `deploy/docker-compose.middleware.yml` 面向本地开发，暴露 MySQL、Redis、RabbitMQ、Elasticsearch 到本机端口。完整容器化部署使用 `deploy/docker-compose.yml`。
-
-如需完整容器化部署，先从示例生成环境变量文件并替换所有 `change-me-*` 值：
-
-```powershell
-Copy-Item deploy/.env.example deploy/.env
-docker compose -f deploy/docker-compose.yml --env-file deploy/.env up -d --build
-```
+- **当前 compose**：主要启动 MySQL + Redis，RabbitMQ / ES / MinIO 后续阶段再接入或扩展
 
 ### 2. 构建后端
 
@@ -499,7 +488,7 @@ Authorization: Bearer <token>
 | `8ae1764` | Day 28：全面压测脚本与报告模板（bid/list/search stress scripts + REPORT-Day28） |
 | `a8bdf19` | Day 29：优化与容灾复核（slow SQL review + cache strategy + Redis/MQ failure drill docs） |
 | `96633c3` | Day 30：打包部署配置（Dockerfile + docker-compose + Nginx + deploy check） |
-| 工作区待提交 | Day 31：最终联调与演示准备（smoke test + demo script + defense checklist） |
+| _pending_ | Day 31：最终联调与演示准备（smoke test + demo script + defense checklist） |
 
 ## WebSocket 使用说明
 
