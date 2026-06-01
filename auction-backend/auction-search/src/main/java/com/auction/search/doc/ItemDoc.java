@@ -20,12 +20,12 @@ public class ItemDoc {
     @Id
     private Long id;
 
-    /** 标题，使用 ik_max_word 分词以支持中文搜索 */
-    @Field(type = FieldType.Text, analyzer = "ik_max_word", searchAnalyzer = "ik_smart")
+    /** 标题。开发环境默认 ES 镜像未内置 IK 分词器，先使用标准分词确保索引可创建。 */
+    @Field(type = FieldType.Text)
     private String title;
 
     /** 副标题 */
-    @Field(type = FieldType.Text, analyzer = "ik_max_word", searchAnalyzer = "ik_smart")
+    @Field(type = FieldType.Text)
     private String subtitle;
 
     /** 分类ID，用于筛选聚合 */

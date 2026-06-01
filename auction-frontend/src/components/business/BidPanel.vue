@@ -19,6 +19,8 @@ const emit = defineEmits<{
 const submitting = ref(false)
 const bidPrice = ref('')
 
+const canBid = computed(() => Number(props.item.status) === 3)
+const statusHint = computed(() => props.item.statusText || '当前状态不可出价')
 const minBid = computed(() =>
   toDecimal(props.item.currentPrice ?? props.item.startPrice).plus(toDecimal(props.item.bidIncrement || 1)),
 )
@@ -28,6 +30,10 @@ function fillMinBid() {
 }
 
 async function submitBid() {
+  if (!canBid.value) {
+    ElMessage.warning(statusHint.value)
+    return
+  }
   if (!props.authenticated) {
     ElMessage.warning('请先登录后再参与竞拍')
     return
@@ -49,6 +55,10 @@ async function submitBid() {
 }
 
 async function submitBuyNow() {
+  if (!canBid.value) {
+    ElMessage.warning(statusHint.value)
+    return
+  }
   if (!props.authenticated) {
     ElMessage.warning('请先登录后再一口价购买')
     return
@@ -77,7 +87,7 @@ async function submitBuyNow() {
       <span v-if="item.buyNowPrice">一口价 <strong>{{ formatMoney(item.buyNowPrice) }}</strong></span>
     </div>
 
-    <ElForm label-position="top">
+    <ElForm v-if="canBid" label-position="top">
       <ElFormItem label="我的出价">
         <ElInput v-model="bidPrice" inputmode="decimal" placeholder="请输入出价金额">
           <template #append>
@@ -92,6 +102,14 @@ async function submitBuyNow() {
         </ElButton>
       </div>
     </ElForm>
+    <ElAlert
+      v-else
+      type="info"
+      :closable="false"
+      show-icon
+      :title="statusHint"
+      description="该拍品当前不可继续出价，可前往订单中心查看后续交易状态。"
+    />
   </aside>
 </template>
 

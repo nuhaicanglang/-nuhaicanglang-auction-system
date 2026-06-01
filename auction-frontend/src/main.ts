@@ -6,6 +6,9 @@ import App from './App.vue'
 import { router } from './router'
 import { pinia } from './stores'
 
+const browserGlobal = globalThis as typeof globalThis & { global?: typeof globalThis }
+browserGlobal.global ??= browserGlobal
+
 const app = createApp(App)
 
 app.use(pinia)

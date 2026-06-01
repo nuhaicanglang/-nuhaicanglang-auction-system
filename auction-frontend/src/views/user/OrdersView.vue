@@ -13,6 +13,26 @@ const orders = ref<Order[]>([])
 const loading = ref(false)
 const isSeller = computed(() => route.path.includes('/seller'))
 
+function canPay(order: Order) {
+  return !isSeller.value && Number(order.status) === 1
+}
+
+function canShip(order: Order) {
+  return isSeller.value && Number(order.status) === 2
+}
+
+function canComplete(order: Order) {
+  return !isSeller.value && [2, 3].includes(Number(order.status))
+}
+
+function canReview(order: Order) {
+  return Number(order.status) === 4
+}
+
+function hasActions(order: Order) {
+  return canPay(order) || canShip(order) || canComplete(order) || canReview(order)
+}
+
 async function loadOrders() {
   loading.value = true
   try {
@@ -72,10 +92,11 @@ onMounted(loadOrders)
       </ElTableColumn>
       <ElTableColumn label="操作" width="260" fixed="right">
         <template #default="{ row }">
-          <ElButton v-if="!isSeller" size="small" type="primary" @click="pay(row.id)">支付</ElButton>
-          <ElButton v-if="isSeller" size="small" type="primary" @click="ship(row.id)">发货</ElButton>
-          <ElButton v-if="!isSeller" size="small" @click="complete(row.id)">确认收货</ElButton>
-          <ElButton size="small" @click="review(row.id)">评价</ElButton>
+          <ElButton v-if="canPay(row)" size="small" type="primary" @click="pay(row.id)">支付</ElButton>
+          <ElButton v-if="canShip(row)" size="small" type="primary" @click="ship(row.id)">发货</ElButton>
+          <ElButton v-if="canComplete(row)" size="small" @click="complete(row.id)">确认收货</ElButton>
+          <ElButton v-if="canReview(row)" size="small" @click="review(row.id)">评价</ElButton>
+          <span v-if="!hasActions(row)" class="muted">暂无操作</span>
         </template>
       </ElTableColumn>
     </ElTable>
