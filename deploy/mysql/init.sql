@@ -476,3 +476,15 @@ CREATE TABLE IF NOT EXISTS `biz_notification` (
     KEY `idx_user_read_created` (`user_id`, `is_read`, `created_at` DESC),
     KEY `idx_related_item` (`related_item_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='站内信通知';
+
+CREATE TABLE IF NOT EXISTS `biz_favorite` (
+    `id`         BIGINT UNSIGNED NOT NULL,
+    `user_id`    BIGINT UNSIGNED NOT NULL,
+    `item_id`    BIGINT UNSIGNED NOT NULL,
+    `tenant_id`  BIGINT UNSIGNED NOT NULL DEFAULT 0,
+    `created_at` DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_user_item` (`user_id`, `item_id`),
+    KEY `idx_user_created` (`user_id`, `created_at` DESC),
+    KEY `idx_item` (`item_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户收藏拍品';

@@ -2,12 +2,14 @@
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import DOMPurify from 'dompurify'
+import { ElMessage } from 'element-plus'
+import { Heart } from '@lucide/vue'
 import BidPanel from '@/components/business/BidPanel.vue'
 import CountdownBadge from '@/components/common/CountdownBadge.vue'
 import EmptyPanel from '@/components/common/EmptyPanel.vue'
 import PriceText from '@/components/common/PriceText.vue'
 import StatusTag from '@/components/common/StatusTag.vue'
-import { getItem, listBids } from '@/api/items'
+import { addFavorite, getFavoriteStatus, getItem, listBids, removeFavorite } from '@/api/items'
 import { useAuthStore } from '@/stores/auth'
 import type { AuctionItem, Bid } from '@/types/domain'
 import { AuctionSocket } from '@/services/auctionSocket'
@@ -17,6 +19,8 @@ const route = useRoute()
 const auth = useAuthStore()
 const item = ref<AuctionItem | null>(null)
 const bids = ref<Bid[]>([])
+const favorited = ref(false)
+const favoriteLoading = ref(false)
 const socket = new AuctionSocket()
 
 const cleanDescription = computed(() => DOMPurify.sanitize(item.value?.description || '<p>暂无详情描述。</p>'))
@@ -26,6 +30,37 @@ async function loadDetail() {
   item.value = await getItem(id)
   const page = await listBids(id)
   bids.value = normalizeRecords(page)
+  if (auth.isAuthenticated) {
+    favorited.value = (await getFavoriteStatus(id).catch(() => ({ favorited: false }))).favorited
+  } else {
+    favorited.value = false
+  }
+}
+
+async function toggleFavorite() {
+  if (!item.value) {
+    return
+  }
+  if (!auth.isAuthenticated) {
+    ElMessage.warning('请先登录后再收藏拍品')
+    return
+  }
+  favoriteLoading.value = true
+  try {
+    if (favorited.value) {
+      await removeFavorite(item.value.id)
+      favorited.value = false
+      item.value.favoriteCount = Math.max(0, Number(item.value.favoriteCount ?? 0) - 1)
+      ElMessage.success('已取消收藏')
+    } else {
+      await addFavorite(item.value.id)
+      favorited.value = true
+      item.value.favoriteCount = Number(item.value.favoriteCount ?? 0) + 1
+      ElMessage.success('已收藏')
+    }
+  } finally {
+    favoriteLoading.value = false
+  }
 }
 
 onMounted(async () => {
@@ -58,6 +93,10 @@ onBeforeUnmount(() => socket.disconnect())
           <div class="title-row">
             <StatusTag :status="item.status" :text="item.statusText" />
             <CountdownBadge :end-time="item.actualEndTime || item.endTime" />
+            <ElButton class="favorite-button" :loading="favoriteLoading" plain @click="toggleFavorite">
+              <Heart aria-hidden="true" :fill="favorited ? 'currentColor' : 'none'" />
+              {{ favorited ? '已收藏' : '收藏' }}
+            </ElButton>
           </div>
           <h1>{{ item.title }}</h1>
           <p>{{ item.subtitle || '公开竞价，价高者得。' }}</p>
@@ -69,6 +108,7 @@ onBeforeUnmount(() => socket.disconnect())
           <dl class="meta-list">
             <div><dt>分类</dt><dd>{{ item.categoryPath || '-' }}</dd></div>
             <div><dt>卖家</dt><dd>{{ item.sellerName || `用户 ${item.sellerId ?? '-'}` }}</dd></div>
+            <div><dt>收藏</dt><dd>{{ item.favoriteCount ?? 0 }} 人收藏</dd></div>
             <div><dt>开始时间</dt><dd>{{ formatDateTime(item.startTime) }}</dd></div>
             <div><dt>结束时间</dt><dd>{{ formatDateTime(item.actualEndTime || item.endTime) }}</dd></div>
           </dl>
@@ -151,6 +191,12 @@ onBeforeUnmount(() => socket.disconnect())
   flex-wrap: wrap;
   align-items: center;
   gap: 12px;
+}
+
+.favorite-button svg {
+  width: 16px;
+  height: 16px;
+  margin-right: 6px;
 }
 
 .info h1 {

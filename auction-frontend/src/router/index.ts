@@ -37,7 +37,7 @@ const routes: RouteRecordRaw[] = [
       { path: 'credit', name: 'credit', component: () => import('@/views/user/CreditView.vue'), meta: { title: '信用分', requiresAuth: true, menu: true } },
       { path: 'reviews', name: 'reviews', component: () => import('@/views/user/ReviewsView.vue'), meta: { title: '评价管理', requiresAuth: true, menu: true } },
       { path: 'search-history', name: 'search-history', component: () => import('@/views/user/SearchHistoryView.vue'), meta: { title: '搜索历史', requiresAuth: true, menu: true } },
-      { path: 'favorites', name: 'favorites', component: () => import('@/views/system/BacklogView.vue'), meta: { title: '我的收藏', requiresAuth: true, menu: true } },
+      { path: 'favorites', name: 'favorites', component: () => import('@/views/user/FavoritesView.vue'), meta: { title: '我的收藏', requiresAuth: true, menu: true } },
       { path: 'notifications', name: 'notifications', component: () => import('@/views/user/NotificationsView.vue'), meta: { title: '站内信', requiresAuth: true, menu: true } },
     ],
   },

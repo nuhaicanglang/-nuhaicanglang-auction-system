@@ -6,6 +6,7 @@ import {
   Bell,
   BookOpenCheck,
   Gavel,
+  Heart,
   History,
   LayoutDashboard,
   LogOut,
@@ -37,6 +38,7 @@ const userMenus = [
   { path: '/user/credit', label: '信用分', icon: ShieldCheck },
   { path: '/user/reviews', label: '评价管理', icon: Scale },
   { path: '/user/search-history', label: '搜索历史', icon: History },
+  { path: '/user/favorites', label: '我的收藏', icon: Heart },
   { path: '/user/notifications', label: '站内信', icon: Bell },
 ]
 

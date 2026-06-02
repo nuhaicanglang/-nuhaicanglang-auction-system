@@ -91,3 +91,33 @@ export function buyNow(itemId: ID) {
     idempotent: true,
   })
 }
+
+export function listMyFavorites(params = { page: 1, size: 20 }) {
+  return request<PageResult<AuctionItem>>({
+    url: '/api/me/favorites',
+    method: 'GET',
+    params,
+  })
+}
+
+export function getFavoriteStatus(itemId: ID) {
+  return request<{ favorited: boolean }>({
+    url: `/api/items/${itemId}/favorite`,
+    method: 'GET',
+    silent: true,
+  })
+}
+
+export function addFavorite(itemId: ID) {
+  return request<void>({
+    url: `/api/items/${itemId}/favorite`,
+    method: 'POST',
+  })
+}
+
+export function removeFavorite(itemId: ID) {
+  return request<void>({
+    url: `/api/items/${itemId}/favorite`,
+    method: 'DELETE',
+  })
+}
