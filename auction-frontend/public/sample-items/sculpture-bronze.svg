@@ -1,0 +1,11 @@
+<svg width="1200" height="900" viewBox="0 0 1200 900" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="900" fill="#F2E5D8"/>
+  <rect x="118" y="118" width="964" height="664" rx="32" fill="#22373D"/>
+  <ellipse cx="612" cy="682" rx="204" ry="44" fill="#16262B" fill-opacity="0.36"/>
+  <rect x="500" y="534" width="224" height="104" rx="14" fill="#6D4B34"/>
+  <path d="M612 238C678 238 732 296 732 366V544H492V366C492 296 546 238 612 238Z" fill="#A05F33"/>
+  <circle cx="612" cy="224" r="84" fill="#B97541"/>
+  <path d="M548 354C590 330 634 330 676 354V514H548V354Z" fill="#8C502B"/>
+  <text x="172" y="212" fill="#F6E7D1" font-size="64" font-family="Georgia, serif">Bronze Sculpture</text>
+  <text x="172" y="272" fill="#C7B096" font-size="30" font-family="Georgia, serif">Decorative tabletop collectible</text>
+</svg>

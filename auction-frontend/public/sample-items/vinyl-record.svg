@@ -1,0 +1,13 @@
+<svg width="1200" height="900" viewBox="0 0 1200 900" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="900" fill="#F3EADF"/>
+  <rect x="212" y="172" width="776" height="556" rx="38" fill="#7B553E"/>
+  <circle cx="600" cy="450" r="208" fill="#121212"/>
+  <circle cx="600" cy="450" r="148" stroke="#424242" stroke-width="2"/>
+  <circle cx="600" cy="450" r="108" stroke="#424242" stroke-width="2"/>
+  <circle cx="600" cy="450" r="62" fill="#D59E4A"/>
+  <circle cx="600" cy="450" r="16" fill="#F5E8D0"/>
+  <rect x="764" y="248" width="170" height="18" rx="9" transform="rotate(24 764 248)" fill="#D4C4AF"/>
+  <circle cx="894" cy="308" r="20" fill="#D4C4AF"/>
+  <text x="220" y="132" fill="#43342A" font-size="68" font-family="Georgia, serif">Vinyl Set</text>
+  <text x="220" y="794" fill="#74665B" font-size="30" font-family="Georgia, serif">Lifestyle collectible for home and music category</text>
+</svg>

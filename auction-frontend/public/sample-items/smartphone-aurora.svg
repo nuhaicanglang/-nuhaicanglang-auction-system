@@ -1,0 +1,18 @@
+<svg width="1200" height="900" viewBox="0 0 1200 900" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="900" fill="#EEF6F8"/>
+  <rect x="388" y="118" width="424" height="664" rx="48" fill="#1A202A"/>
+  <rect x="424" y="160" width="352" height="580" rx="34" fill="url(#g1)"/>
+  <rect x="546" y="182" width="108" height="16" rx="8" fill="#1B2530"/>
+  <circle cx="708" cy="248" r="36" fill="#F4FBFF" fill-opacity="0.22"/>
+  <circle cx="626" cy="320" r="98" fill="#FFF7DA" fill-opacity="0.32"/>
+  <circle cx="548" cy="476" r="126" fill="#8DE8FF" fill-opacity="0.26"/>
+  <text x="152" y="228" fill="#142431" font-size="72" font-family="Georgia, serif">Aurora X1</text>
+  <text x="154" y="304" fill="#516472" font-size="34" font-family="Georgia, serif">Flagship smartphone sample item</text>
+  <defs>
+    <linearGradient id="g1" x1="424" y1="160" x2="776" y2="740" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#1A87B6"/>
+      <stop offset="0.48" stop-color="#4ED0E4"/>
+      <stop offset="1" stop-color="#0E3355"/>
+    </linearGradient>
+  </defs>
+</svg>

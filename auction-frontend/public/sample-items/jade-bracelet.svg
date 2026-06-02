@@ -1,0 +1,9 @@
+<svg width="1200" height="900" viewBox="0 0 1200 900" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="900" fill="#EEF6EC"/>
+  <circle cx="600" cy="450" r="226" fill="#A7D4BC"/>
+  <circle cx="600" cy="450" r="136" fill="#EEF6EC"/>
+  <circle cx="600" cy="450" r="176" stroke="#8CBF9F" stroke-width="84"/>
+  <circle cx="470" cy="332" r="34" fill="#F7FFFB" fill-opacity="0.62"/>
+  <text x="170" y="196" fill="#2D4B3C" font-size="68" font-family="Georgia, serif">Jade Bracelet</text>
+  <text x="172" y="268" fill="#5F7D70" font-size="32" font-family="Georgia, serif">Jewelry auction sample with certificate</text>
+</svg>

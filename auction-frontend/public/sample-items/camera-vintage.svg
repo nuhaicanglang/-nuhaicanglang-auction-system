@@ -1,0 +1,13 @@
+<svg width="1200" height="900" viewBox="0 0 1200 900" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="900" fill="#E9E4D8"/>
+  <rect x="162" y="240" width="876" height="444" rx="42" fill="#212121"/>
+  <rect x="242" y="290" width="226" height="116" rx="18" fill="#3B3B3B"/>
+  <circle cx="690" cy="460" r="174" fill="#343434"/>
+  <circle cx="690" cy="460" r="126" fill="#0E2935"/>
+  <circle cx="690" cy="460" r="78" fill="#4C8399"/>
+  <circle cx="690" cy="460" r="30" fill="#D1E6EE"/>
+  <rect x="882" y="316" width="90" height="48" rx="12" fill="#787878"/>
+  <path d="M276 240L360 172H506L566 240H276Z" fill="#484848"/>
+  <text x="180" y="174" fill="#332E29" font-size="64" font-family="Georgia, serif">Vintage Camera</text>
+  <text x="184" y="744" fill="#5E5850" font-size="30" font-family="Georgia, serif">Rangefinder collectible with leather case</text>
+</svg>

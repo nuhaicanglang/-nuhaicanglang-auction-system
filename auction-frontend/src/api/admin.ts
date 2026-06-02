@@ -41,6 +41,15 @@ export function forceOfflineItem(id: ID) {
   })
 }
 
+export function seedSampleItems(data: { count?: number }) {
+  return request<{ count: number; itemIds: ID[] }>({
+    url: '/api/admin/items/sample-batch',
+    method: 'POST',
+    data,
+    idempotent: true,
+  })
+}
+
 export function listAdminCategories() {
   return request<Category[]>({
     url: '/api/admin/categories/tree',

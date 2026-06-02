@@ -1,0 +1,10 @@
+<svg width="1200" height="900" viewBox="0 0 1200 900" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="900" fill="#F8F2E7"/>
+  <rect x="180" y="286" width="840" height="84" rx="42" transform="rotate(-12 180 286)" fill="#3A1F14"/>
+  <rect x="686" y="180" width="176" height="84" rx="32" transform="rotate(-12 686 180)" fill="#B6894B"/>
+  <path d="M922 136L1012 208L910 260L886 198L922 136Z" fill="#D9B883"/>
+  <circle cx="350" cy="632" r="94" fill="#E9D4B4"/>
+  <path d="M322 632C334 600 366 578 402 578C450 578 490 618 490 666C490 720 444 756 390 756C350 756 316 730 304 692H364C392 692 416 668 416 640C416 612 392 588 364 588C340 588 320 604 312 626L322 632Z" fill="#8B5E3C"/>
+  <text x="166" y="174" fill="#4B3628" font-size="68" font-family="Georgia, serif">Fountain Pen</text>
+  <text x="168" y="762" fill="#786A5D" font-size="30" font-family="Georgia, serif">Gift box style stationery collectible</text>
+</svg>

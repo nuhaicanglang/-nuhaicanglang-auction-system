@@ -1,0 +1,13 @@
+<svg width="1200" height="900" viewBox="0 0 1200 900" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="900" fill="#F6F0E8"/>
+  <rect x="508" y="72" width="184" height="196" rx="48" fill="#7C5935"/>
+  <rect x="508" y="632" width="184" height="196" rx="48" fill="#7C5935"/>
+  <circle cx="600" cy="450" r="220" fill="#C9A36D"/>
+  <circle cx="600" cy="450" r="170" fill="#FFF8F1"/>
+  <circle cx="600" cy="450" r="22" fill="#7C5935"/>
+  <path d="M600 450L600 340" stroke="#7C5935" stroke-width="18" stroke-linecap="round"/>
+  <path d="M600 450L694 492" stroke="#7C5935" stroke-width="18" stroke-linecap="round"/>
+  <circle cx="600" cy="450" r="134" stroke="#D6BF9A" stroke-width="2" stroke-dasharray="4 18"/>
+  <text x="152" y="208" fill="#3E3126" font-size="68" font-family="Georgia, serif">Chronos Watch</text>
+  <text x="152" y="282" fill="#6F655A" font-size="32" font-family="Georgia, serif">Mechanical wristwatch sample item</text>
+</svg>

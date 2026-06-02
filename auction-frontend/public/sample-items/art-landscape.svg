@@ -1,0 +1,11 @@
+<svg width="1200" height="900" viewBox="0 0 1200 900" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="900" fill="#F7F0E2"/>
+  <rect x="78" y="78" width="1044" height="744" rx="36" fill="#E9D9B4"/>
+  <rect x="132" y="132" width="936" height="636" rx="28" fill="#FDF7EA"/>
+  <path d="M180 628C272 518 344 446 462 446C590 446 650 566 760 566C860 566 930 492 1020 376V726H180V628Z" fill="#86A38B"/>
+  <path d="M180 564C270 472 348 410 444 410C554 410 628 500 714 500C804 500 870 444 1020 290V726H180V564Z" fill="#5F7D67"/>
+  <circle cx="880" cy="286" r="62" fill="#D79C52"/>
+  <path d="M286 696C332 604 370 560 414 560C456 560 488 598 532 678L286 696Z" fill="#31443C"/>
+  <text x="176" y="220" fill="#2A312C" font-size="72" font-family="Georgia, serif">Landscape Scroll</text>
+  <text x="176" y="286" fill="#5B5F57" font-size="34" font-family="Georgia, serif">Classical ink wash sample artwork</text>
+</svg>

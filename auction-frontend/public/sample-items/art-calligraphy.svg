@@ -1,0 +1,11 @@
+<svg width="1200" height="900" viewBox="0 0 1200 900" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="900" fill="#F2E8D5"/>
+  <rect x="96" y="92" width="1008" height="716" rx="30" fill="#FBF7EF"/>
+  <rect x="142" y="136" width="916" height="628" rx="20" fill="#EFE5CE"/>
+  <path d="M344 246C440 226 500 236 530 286C566 346 522 418 452 466C370 522 338 602 386 666" stroke="#1F2320" stroke-width="28" stroke-linecap="round"/>
+  <path d="M536 230C648 266 698 324 688 394C678 462 594 518 524 550C450 584 416 626 424 672" stroke="#1F2320" stroke-width="24" stroke-linecap="round"/>
+  <path d="M736 240C826 300 860 358 848 430C834 520 730 562 650 612C600 642 578 676 586 706" stroke="#1F2320" stroke-width="24" stroke-linecap="round"/>
+  <circle cx="918" cy="656" r="66" fill="#B54837"/>
+  <text x="168" y="196" fill="#3A3A34" font-size="64" font-family="Georgia, serif">Running Script</text>
+  <text x="170" y="738" fill="#666056" font-size="32" font-family="Georgia, serif">Mounted calligraphy hanging scroll</text>
+</svg>
