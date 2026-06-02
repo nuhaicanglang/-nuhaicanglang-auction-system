@@ -168,24 +168,25 @@ Invoke-RestMethod http://localhost:8080/api/ping
 
 ## 常用账号
 
+标准演示数据脚本：`deploy/mysql/demo-data.sql`。首次创建 MySQL 容器时会自动执行；已有数据库可手动重置：
+
+```powershell
+Get-Content deploy/mysql/demo-data.sql | docker exec -i auction-mysql mysql -uroot -proot123456 --default-character-set=utf8mb4 auction
+```
+
+所有可登录演示账号密码均为 `123456`。
+
 | 用户名 | 密码 | 用途 |
 |---|---|---|
-| `admin` | `123456` | 管理员登录、商品审核、强制下架 |
-| `bidder01` | `Bid123456` | 出价测试用户（如数据库已有） |
-
-如果 `bidder01` 不存在，可调用注册接口创建：
-
-```http
-POST /api/system/users/register
-Content-Type: application/json
-
-{
-  "username": "bidder01",
-  "password": "Bid123456",
-  "nickname": "bidder",
-  "email": "bidder01@test.com"
-}
-```
+| `admin` | `123456` | 超级管理员：看板、商品审核、用户、角色、钱包、信用、导出 |
+| `ops_admin` | `123456` | 运营管理员：日常后台运营、审核、用户管理 |
+| `seller_art` | `123456` | 艺术品卖家：管理字画、雕塑类拍品 |
+| `seller_digital` | `123456` | 数码卖家：管理手机、电脑、相机类拍品 |
+| `seller_luxury` | `123456` | 奢侈品卖家：管理腕表、珠宝、生活方式类拍品 |
+| `buyer_vip` | `123456` | 企业采购买家：高信用、高余额、含收藏/订单/通知 |
+| `buyer_standard` | `123456` | 个人收藏买家：标准信用、可参与竞价 |
+| `buyer_risk` | `123456` | 信用观察用户：低信用，用于信用管理演示 |
+| `blacklisted_user` | `123456` | 黑名单演示用户：不可登录，用于风控状态展示 |
 
 ## 核心接口示例
 
