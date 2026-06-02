@@ -13,6 +13,7 @@ import com.auction.mq.constant.MqConstants;
 import com.auction.mq.message.AuctionSettleMessage;
 import com.auction.mq.message.ItemSyncMessage;
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.springframework.amqp.core.MessagePostProcessor;
@@ -24,6 +25,7 @@ import org.springframework.web.bind.annotation.*;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.List;
 
 /**
  * 商品管理端接口（管理员审核、强制下架等）。
@@ -45,6 +47,21 @@ public class AdminItemController {
     public Result<IPage<AuctionItemVO>> auditList(AuctionItemQueryDTO query) {
         query.setStatus(1); // 待审核
         return Result.success(auctionItemService.listItems(query));
+    }
+
+    /**
+     * 管理员批量注入样例商品，默认直接生成拍卖中商品，便于前台演示和联调。
+     */
+    @PostMapping("/sample-batch")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
+    @Log(module = "商品管理", businessType = "NEW", description = "批量注入样例商品")
+    public Result<SampleBatchResult> seedSamples(@RequestBody(required = false) SampleBatchDTO dto) {
+        int count = dto == null || dto.getCount() == null ? 12 : dto.getCount();
+        if (count < 1 || count > 30) {
+            throw new BizException(30005, "一次注入数量需在 1 到 30 之间");
+        }
+        List<Long> itemIds = auctionItemService.createSampleItems(count, SecurityUtils.getUserId());
+        return Result.success(new SampleBatchResult(itemIds.size(), itemIds));
     }
 
     /**
@@ -138,5 +155,17 @@ public class AdminItemController {
         /** PASS / REJECT */
         private String action;
         private String remark;
+    }
+
+    @Data
+    public static class SampleBatchDTO {
+        private Integer count;
+    }
+
+    @Data
+    @AllArgsConstructor
+    public static class SampleBatchResult {
+        private Integer count;
+        private List<Long> itemIds;
     }
 }

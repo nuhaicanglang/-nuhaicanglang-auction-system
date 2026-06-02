@@ -7,6 +7,8 @@ import com.auction.business.vo.AuctionItemVO;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.IService;
 
+import java.util.List;
+
 /**
  * 拍卖商品服务接口。
  */
@@ -26,4 +28,7 @@ public interface AuctionItemService extends IService<BizAuctionItem> {
 
     /** 商品详情 */
     AuctionItemVO getItemDetail(Long id);
+
+    /** 管理员批量创建带图样例商品 */
+    List<Long> createSampleItems(Integer count, Long operatorId);
 }
