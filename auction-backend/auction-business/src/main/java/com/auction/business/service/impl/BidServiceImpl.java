@@ -4,6 +4,7 @@ import com.auction.business.bid.BidContext;
 import com.auction.business.bid.BidValidatorChain;
 import com.auction.business.entity.BizAuctionItem;
 import com.auction.business.entity.BizBid;
+import com.auction.business.mapper.BizAuctionItemMapper;
 import com.auction.business.mapper.BizBidMapper;
 import com.auction.business.service.AuctionItemService;
 import com.auction.business.service.BidService;
@@ -11,6 +12,7 @@ import com.auction.business.service.OrderService;
 import com.auction.business.service.WalletService;
 import com.auction.business.vo.BidResultVO;
 import com.auction.business.vo.BidVO;
+import com.auction.business.vo.MyBidVO;
 import com.auction.common.exception.BizException;
 import com.auction.framework.websocket.WsPusher;
 import com.auction.common.util.SnowflakeIdWorker;
@@ -37,7 +39,11 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * 出价服务实现。
@@ -56,11 +62,14 @@ import java.util.List;
 public class BidServiceImpl implements BidService {
 
     private static final long MQ_CONFIRM_TIMEOUT_MS = 5000L;
+    private static final Map<Integer, String> ITEM_STATUS_MAP = Map.of(
+            1, "待审核", 2, "待开拍", 3, "拍卖中", 4, "已结束", 5, "已成交", 6, "流拍", 7, "已下架");
 
     private final StringRedisTemplate redisTemplate;
     private final DefaultRedisScript<Long> bidScript;
     private final DefaultRedisScript<Long> buyNowScript;
     private final AuctionItemService auctionItemService;
+    private final BizAuctionItemMapper itemMapper;
     private final BizBidMapper bidMapper;
     private final BidValidatorChain validatorChain;
     private final WsPusher wsPusher;
@@ -73,6 +82,7 @@ public class BidServiceImpl implements BidService {
                           @Qualifier("bidScript") DefaultRedisScript<Long> bidScript,
                           @Qualifier("buyNowScript") DefaultRedisScript<Long> buyNowScript,
                           AuctionItemService auctionItemService,
+                          BizAuctionItemMapper itemMapper,
                           BizBidMapper bidMapper,
                           BidValidatorChain validatorChain,
                           WsPusher wsPusher,
@@ -83,6 +93,7 @@ public class BidServiceImpl implements BidService {
         this.bidScript = bidScript;
         this.buyNowScript = buyNowScript;
         this.auctionItemService = auctionItemService;
+        this.itemMapper = itemMapper;
         this.bidMapper = bidMapper;
         this.validatorChain = validatorChain;
         this.wsPusher = wsPusher;
@@ -261,6 +272,28 @@ public class BidServiceImpl implements BidService {
                 .orderByDesc(BizBid::getBidTime);
         Page<BizBid> result = bidMapper.selectPage(p, wrapper);
         return result.convert(this::toVO);
+    }
+
+    @Override
+    public IPage<MyBidVO> listMyBids(Long userId, int page, int size) {
+        Page<BizBid> p = new Page<>(page, size);
+        LambdaQueryWrapper<BizBid> wrapper = new LambdaQueryWrapper<BizBid>()
+                .eq(BizBid::getBidderId, userId)
+                .orderByDesc(BizBid::getBidTime)
+                .orderByDesc(BizBid::getId);
+        Page<BizBid> result = bidMapper.selectPage(p, wrapper);
+
+        List<Long> itemIds = result.getRecords().stream()
+                .map(BizBid::getItemId)
+                .filter(Objects::nonNull)
+                .distinct()
+                .toList();
+        Map<Long, BizAuctionItem> itemMap = itemIds.isEmpty()
+                ? new HashMap<>()
+                : itemMapper.selectBatchIds(itemIds).stream()
+                .collect(Collectors.toMap(BizAuctionItem::getId, item -> item));
+
+        return result.convert(bid -> toMyBidVO(bid, itemMap.get(bid.getItemId()), userId));
     }
 
     // ----------------------------------------------------------------
@@ -450,6 +483,81 @@ public class BidServiceImpl implements BidService {
         vo.setBidTime(bid.getBidTime());
         vo.setBidType(bid.getBidType());
         vo.setStatus(bid.getStatus());
+        return vo;
+    }
+
+    private MyBidVO toMyBidVO(BizBid bid, BizAuctionItem item, Long userId) {
+        MyBidVO vo = new MyBidVO();
+        vo.setId(bid.getId());
+        vo.setItemId(bid.getItemId());
+        vo.setMyBidPrice(bid.getBidPrice());
+        vo.setBidTime(bid.getBidTime());
+        vo.setBidType(bid.getBidType());
+        vo.setBidStatus(bid.getStatus());
+
+        if (item == null) {
+            vo.setItemTitle("商品已不存在");
+            vo.setItemStatusText("未知");
+            vo.setResultCode("MISSING");
+            vo.setResultText("商品不存在");
+            return vo;
+        }
+
+        vo.setItemTitle(item.getTitle());
+        vo.setItemCoverImage(item.getCoverImage());
+        vo.setSellerId(item.getSellerId());
+        vo.setCurrentPrice(item.getCurrentPrice());
+        vo.setBuyNowPrice(item.getBuyNowPrice());
+        vo.setEndTime(item.getEndTime());
+        vo.setItemStatus(item.getStatus());
+        vo.setItemStatusText(ITEM_STATUS_MAP.getOrDefault(item.getStatus(), "未知"));
+
+        if (item.getStatus() != null && item.getStatus() == 5) {
+            if (userId.equals(item.getWinnerId())) {
+                vo.setResultCode("WON");
+                vo.setResultText("已中标");
+            } else {
+                vo.setResultCode("OUTBID");
+                vo.setResultText("未中标");
+            }
+            return vo;
+        }
+        if (item.getStatus() != null && item.getStatus() == 6) {
+            vo.setResultCode("FAILED");
+            vo.setResultText("已流拍");
+            return vo;
+        }
+        if (item.getStatus() != null && item.getStatus() == 7) {
+            vo.setResultCode("OFFLINE");
+            vo.setResultText("商品已下架");
+            return vo;
+        }
+        if (item.getStatus() != null && item.getStatus() == 4) {
+            vo.setResultCode("CLOSED");
+            vo.setResultText("拍卖已结束");
+            return vo;
+        }
+        if (item.getStatus() != null && item.getStatus() == 1) {
+            vo.setResultCode("PENDING");
+            vo.setResultText("待审核");
+            return vo;
+        }
+        if (item.getStatus() != null && item.getStatus() == 2) {
+            vo.setResultCode("WAITING");
+            vo.setResultText("待开拍");
+            return vo;
+        }
+
+        if (bid.getStatus() != null && bid.getStatus() == 1) {
+            vo.setResultCode("LEADING");
+            vo.setResultText("当前领先");
+        } else if (bid.getStatus() != null && bid.getStatus() == 2) {
+            vo.setResultCode("OUTBID");
+            vo.setResultText("已被超越");
+        } else {
+            vo.setResultCode("HISTORY");
+            vo.setResultText("历史出价");
+        }
         return vo;
     }
 }

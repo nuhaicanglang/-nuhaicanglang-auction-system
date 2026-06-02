@@ -27,6 +27,36 @@ DELETE FROM `sys_user`;
 
 SET FOREIGN_KEY_CHECKS = 1;
 
+INSERT INTO `biz_category`(`id`, `parent_id`, `path`, `level`, `name`, `icon`, `description`, `sort_order`, `status`, `item_count`, `created_at`, `updated_at`, `deleted`)
+VALUES
+(100, 0, '100', 1, '艺术品', NULL, '书画、雕塑等艺术收藏类拍品', 1, 1, 0, NOW(), NOW(), 0),
+(110, 100, '100/110', 2, '字画', NULL, '国画、油画、书法', 1, 1, 0, NOW(), NOW(), 0),
+(111, 110, '100/110/111', 3, '国画', NULL, '山水、花鸟、人物国画作品', 1, 1, 0, NOW(), NOW(), 0),
+(112, 110, '100/110/112', 3, '油画', NULL, '现代与古典油画作品', 2, 1, 0, NOW(), NOW(), 0),
+(113, 110, '100/110/113', 3, '书法', NULL, '行书、楷书、草书等作品', 3, 1, 0, NOW(), NOW(), 0),
+(120, 100, '100/120', 2, '雕塑', NULL, '铜雕、石雕与当代雕塑', 2, 1, 0, NOW(), NOW(), 0),
+(200, 0, '200', 1, '收藏品', NULL, '生活方式与怀旧收藏类拍品', 2, 1, 0, NOW(), NOW(), 0),
+(300, 0, '300', 1, '数码', NULL, '手机、电脑、相机等数码设备', 3, 1, 0, NOW(), NOW(), 0),
+(310, 300, '300/310', 2, '手机', NULL, '手机与移动终端', 1, 1, 0, NOW(), NOW(), 0),
+(320, 300, '300/320', 2, '电脑', NULL, '笔记本、工作站等设备', 2, 1, 0, NOW(), NOW(), 0),
+(330, 300, '300/330', 2, '相机', NULL, '胶片与数码影像设备', 3, 1, 0, NOW(), NOW(), 0),
+(400, 0, '400', 1, '奢侈品', NULL, '腕表与高端生活方式单品', 4, 1, 0, NOW(), NOW(), 0),
+(500, 0, '500', 1, '珠宝', NULL, '玉器、手镯和珠宝饰品', 5, 1, 0, NOW(), NOW(), 0),
+(900, 0, '900', 1, '其他', NULL, '补充类目', 99, 1, 0, NOW(), NOW(), 0),
+(910, 900, '900/910', 2, '文创杂项', NULL, '礼盒、文创与其他藏品', 1, 1, 0, NOW(), NOW(), 0)
+ON DUPLICATE KEY UPDATE
+`parent_id` = VALUES(`parent_id`),
+`path` = VALUES(`path`),
+`level` = VALUES(`level`),
+`name` = VALUES(`name`),
+`icon` = VALUES(`icon`),
+`description` = VALUES(`description`),
+`sort_order` = VALUES(`sort_order`),
+`status` = VALUES(`status`),
+`item_count` = 0,
+`updated_at` = NOW(),
+`deleted` = 0;
+
 -- 所有演示账号统一密码：123456
 SET @demo_password = '$2a$10$BqMXaJLPIQAw6TODtx46zuwdBoBPAbVEIWV22xDldtEjGvOolcBLK';
 
@@ -170,10 +200,10 @@ INSERT INTO `biz_notification`(
 (160003, 2001, 2, '订单已完成', '“已成交演示：青玉手镯专场”订单已完成，欢迎进行评价。', 100013, 1, DATE_SUB(NOW(), INTERVAL 18 HOUR), DATE_SUB(NOW(), INTERVAL 24 HOUR));
 
 UPDATE `biz_category` c
-LEFT JOIN (
-    SELECT `category_id`, COUNT(*) AS total
-    FROM `biz_auction_item`
-    WHERE `deleted` = 0 AND `status` IN (2, 3)
-    GROUP BY `category_id`
-) x ON c.`id` = x.`category_id`
-SET c.`item_count` = COALESCE(x.`total`, 0);
+SET c.`item_count` = (
+    SELECT COUNT(*)
+    FROM `biz_auction_item` i
+    WHERE i.`deleted` = 0
+      AND i.`status` IN (2, 3)
+      AND i.`category_path` LIKE CONCAT(c.`path`, '%')
+);

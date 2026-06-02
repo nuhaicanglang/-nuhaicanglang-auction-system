@@ -169,6 +169,25 @@ export interface Bid {
   status?: number
 }
 
+export interface MyBid {
+  id: ID
+  itemId: ID
+  itemTitle?: string
+  itemCoverImage?: string
+  sellerId?: ID
+  myBidPrice?: string | number
+  currentPrice?: string | number
+  buyNowPrice?: string | number
+  bidTime?: DateTimeString
+  endTime?: DateTimeString
+  bidType?: number
+  bidStatus?: number
+  itemStatus?: number
+  itemStatusText?: string
+  resultCode?: string
+  resultText?: string
+}
+
 export interface BidResult {
   bidId?: ID
   currentPrice?: string | number

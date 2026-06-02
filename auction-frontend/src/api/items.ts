@@ -7,6 +7,7 @@ import type {
   BidResult,
   Category,
   ID,
+  MyBid,
   PageResult,
 } from '@/types/domain'
 
@@ -95,6 +96,14 @@ export function buyNow(itemId: ID) {
 export function listMyFavorites(params = { page: 1, size: 20 }) {
   return request<PageResult<AuctionItem>>({
     url: '/api/me/favorites',
+    method: 'GET',
+    params,
+  })
+}
+
+export function listMyBids(params = { page: 1, size: 20 }) {
+  return request<PageResult<MyBid>>({
+    url: '/api/me/bids',
     method: 'GET',
     params,
   })

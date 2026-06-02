@@ -2,6 +2,7 @@ package com.auction.business.service;
 
 import com.auction.business.vo.BidResultVO;
 import com.auction.business.vo.BidVO;
+import com.auction.business.vo.MyBidVO;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 
 import java.math.BigDecimal;
@@ -36,4 +37,9 @@ public interface BidService {
      * 查询商品的出价记录（分页，按时间倒序）。
      */
     IPage<BidVO> listBids(Long itemId, int page, int size);
+
+    /**
+     * 查询当前用户的竞拍流水（分页，按时间倒序）。
+     */
+    IPage<MyBidVO> listMyBids(Long userId, int page, int size);
 }
