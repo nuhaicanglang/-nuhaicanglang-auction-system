@@ -62,7 +62,7 @@ export function normalizeTotal<T>(page?: PageResult<T> | T[]) {
   if (Array.isArray(page)) {
     return page.length
   }
-  return page?.total ?? normalizeRecords(page).length
+  return Number(page?.total ?? normalizeRecords(page).length)
 }
 
 export function statusType(status?: number | string) {

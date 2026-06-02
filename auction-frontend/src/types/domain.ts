@@ -11,11 +11,11 @@ export interface PageResult<T> {
   records?: T[]
   list?: T[]
   items?: T[]
-  total?: number
-  current?: number
-  page?: number
-  size?: number
-  pages?: number
+  total?: number | string
+  current?: number | string
+  page?: number | string
+  size?: number | string
+  pages?: number | string
 }
 
 export interface PageQuery {
@@ -198,6 +198,35 @@ export interface Order {
   completedAt?: DateTimeString
   closedAt?: DateTimeString
   closeReason?: string
+  createdAt?: DateTimeString
+}
+
+export interface Notification {
+  id: ID
+  type?: number
+  title: string
+  content?: string
+  relatedItemId?: ID
+  isRead?: number
+  readAt?: DateTimeString
+  createdAt?: DateTimeString
+}
+
+export interface OperLog {
+  id: ID
+  traceId?: string
+  module?: string
+  businessType?: string
+  description?: string
+  method?: string
+  requestUrl?: string
+  requestMethod?: string
+  operUserId?: ID
+  operUserName?: string
+  operIp?: string
+  status?: number
+  errorMsg?: string
+  costMs?: number
   createdAt?: DateTimeString
 }
 

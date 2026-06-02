@@ -3,6 +3,7 @@ import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
   BadgeCheck,
+  Bell,
   BookOpenCheck,
   Gavel,
   History,
@@ -36,6 +37,7 @@ const userMenus = [
   { path: '/user/credit', label: '信用分', icon: ShieldCheck },
   { path: '/user/reviews', label: '评价管理', icon: Scale },
   { path: '/user/search-history', label: '搜索历史', icon: History },
+  { path: '/user/notifications', label: '站内信', icon: Bell },
 ]
 
 const adminMenus = [
@@ -47,6 +49,8 @@ const adminMenus = [
   { path: '/admin/wallet', label: '资金审计', icon: WalletCards },
   { path: '/admin/credit', label: '信用管理', icon: BadgeCheck },
   { path: '/admin/exports', label: '数据导出', icon: BookOpenCheck },
+  { path: '/admin/orders', label: '订单总表', icon: PackageCheck },
+  { path: '/admin/logs', label: '操作日志', icon: History },
 ]
 
 const isAdminSection = computed(() => route.path.startsWith('/admin'))

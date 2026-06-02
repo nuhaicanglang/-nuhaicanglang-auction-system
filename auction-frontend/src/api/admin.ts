@@ -6,6 +6,8 @@ import type {
   Credit,
   CreditLog,
   ID,
+  OperLog,
+  Order,
   PageQuery,
   PageResult,
   Permission,
@@ -38,6 +40,22 @@ export function forceOfflineItem(id: ID) {
   return request<void>({
     url: `/api/admin/items/${id}/force-offline`,
     method: 'POST',
+  })
+}
+
+export function listAdminOrders(params: PageQuery & { orderNo?: string; buyerId?: ID; sellerId?: ID } = {}) {
+  return request<PageResult<Order>>({
+    url: '/api/admin/orders',
+    method: 'GET',
+    params,
+  })
+}
+
+export function listOperLogs(params: PageQuery & { module?: string; businessType?: string; operUserName?: string } = {}) {
+  return request<PageResult<OperLog>>({
+    url: '/api/admin/logs',
+    method: 'GET',
+    params,
   })
 }
 
