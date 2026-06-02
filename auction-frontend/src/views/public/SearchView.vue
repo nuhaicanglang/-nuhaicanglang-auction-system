@@ -61,8 +61,8 @@ onMounted(loadSearch)
       <ElInput v-model="query.keyword" size="large" placeholder="搜索国画 山水、劳力士、翡翠手镯..." clearable />
       <ElSelect v-model="query.sort" size="large">
         <ElOption label="相关度" value="relevance" />
-        <ElOption label="即将结束" value="endingSoon" />
-        <ElOption label="价格" value="price" />
+        <ElOption label="即将结束" value="endTime" />
+        <ElOption label="当前价格" value="currentPrice" />
         <ElOption label="出价数" value="bidCount" />
       </ElSelect>
       <ElButton type="primary" size="large" :loading="loading" @click="loadSearch">搜索</ElButton>

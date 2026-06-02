@@ -21,6 +21,7 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import java.math.BigDecimal;
 import java.time.Duration;
@@ -111,6 +112,13 @@ public class OrderServiceImpl implements OrderService {
     public IPage<OrderVO> listSellerOrders(Long sellerId, OrderQueryDTO query) {
         LambdaQueryWrapper<BizOrder> wrapper = baseQuery(query)
                 .eq(BizOrder::getSellerId, sellerId)
+                .orderByDesc(BizOrder::getCreatedAt);
+        return pageOrders(query, wrapper);
+    }
+
+    @Override
+    public IPage<OrderVO> listAdminOrders(OrderQueryDTO query) {
+        LambdaQueryWrapper<BizOrder> wrapper = baseQuery(query)
                 .orderByDesc(BizOrder::getCreatedAt);
         return pageOrders(query, wrapper);
     }
@@ -216,6 +224,18 @@ public class OrderServiceImpl implements OrderService {
         LambdaQueryWrapper<BizOrder> wrapper = new LambdaQueryWrapper<>();
         if (query.getStatus() != null) {
             wrapper.eq(BizOrder::getStatus, query.getStatus());
+        }
+        if (StringUtils.hasText(query.getOrderNo())) {
+            wrapper.like(BizOrder::getOrderNo, query.getOrderNo().trim());
+        }
+        if (StringUtils.hasText(query.getKeyword())) {
+            wrapper.like(BizOrder::getItemTitle, query.getKeyword().trim());
+        }
+        if (query.getBuyerId() != null) {
+            wrapper.eq(BizOrder::getBuyerId, query.getBuyerId());
+        }
+        if (query.getSellerId() != null) {
+            wrapper.eq(BizOrder::getSellerId, query.getSellerId());
         }
         return wrapper;
     }

@@ -21,6 +21,9 @@ public interface OrderService {
     /** 卖家视角订单列表。 */
     IPage<OrderVO> listSellerOrders(Long sellerId, OrderQueryDTO query);
 
+    /** 管理端订单总表。 */
+    IPage<OrderVO> listAdminOrders(OrderQueryDTO query);
+
     /** 订单详情，仅买家或卖家可查看。 */
     OrderVO getOrderDetail(Long orderId, Long userId);
 

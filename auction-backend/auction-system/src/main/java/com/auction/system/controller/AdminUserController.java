@@ -8,6 +8,7 @@ import com.auction.framework.security.SecurityUtils;
 import com.auction.system.convert.SysRoleConvert;
 import com.auction.system.convert.SysUserConvert;
 import com.auction.system.dto.AssignRolesDTO;
+import com.auction.system.entity.SysRole;
 import com.auction.system.entity.SysUser;
 import com.auction.system.service.SysRoleService;
 import com.auction.system.service.SysUserService;
@@ -44,7 +45,13 @@ public class AdminUserController {
     @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
     public Result<List<SysUserVO>> listUsers() {
         List<SysUserVO> voList = sysUserService.list().stream()
-                .map(SysUserConvert::toVO)
+                .map(user -> {
+                    SysUserVO vo = SysUserConvert.toVO(user);
+                    vo.setRoles(sysRoleService.listRolesByUserId(user.getId()).stream()
+                            .map(SysRole::getCode)
+                            .collect(Collectors.toList()));
+                    return vo;
+                })
                 .collect(Collectors.toList());
         return Result.success(voList);
     }

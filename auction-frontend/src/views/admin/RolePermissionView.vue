@@ -2,8 +2,10 @@
 import { onMounted, ref } from 'vue'
 import { ElMessage, type TreeInstance } from 'element-plus'
 import { assignRolePermissions, getRolePermissions, listPermissions, listRoles } from '@/api/admin'
+import { useAuthStore } from '@/stores/auth'
 import type { ID, Permission, Role } from '@/types/domain'
 
+const auth = useAuthStore()
 const roles = ref<Role[]>([])
 const permissions = ref<Permission[]>([])
 const selectedRole = ref<Role | null>(null)
@@ -25,6 +27,10 @@ async function selectRole(role: Role) {
 async function save() {
   if (!selectedRole.value) {
     ElMessage.warning('请先选择角色')
+    return
+  }
+  if (!auth.roles.includes('SUPER_ADMIN')) {
+    ElMessage.warning('当前账号可查看权限树，但仅超级管理员可以保存角色权限')
     return
   }
   const keys = treeRef.value?.getCheckedKeys(false) ?? []
@@ -56,7 +62,7 @@ onMounted(load)
       <template #header>
         <div class="card-header">
           <span>权限树</span>
-          <ElButton type="primary" @click="save">保存权限</ElButton>
+          <ElButton type="primary" :disabled="!auth.roles.includes('SUPER_ADMIN')" @click="save">保存权限</ElButton>
         </div>
       </template>
       <ElTree
@@ -65,6 +71,7 @@ onMounted(load)
         node-key="id"
         show-checkbox
         default-expand-all
+        :check-strictly="!auth.roles.includes('SUPER_ADMIN')"
         :props="{ label: 'name', children: 'children' }"
       />
     </ElCard>
