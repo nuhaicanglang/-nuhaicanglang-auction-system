@@ -1,5 +1,5 @@
 import Decimal from 'decimal.js'
-import type { PageResult } from '@/types/domain'
+import type { AuctionItem, PageResult } from '@/types/domain'
 
 export function toDecimal(value?: string | number | null) {
   if (value === null || value === undefined || value === '') {
@@ -38,6 +38,46 @@ export function secondsUntil(value?: string | null, now = Date.now()) {
     return 0
   }
   return Math.max(0, Math.floor((end - now) / 1000))
+}
+
+function parseTime(value?: string | null) {
+  if (!value) {
+    return 0
+  }
+  const time = new Date(value).getTime()
+  return Number.isNaN(time) ? 0 : time
+}
+
+export function isAuctionEnded(item?: Pick<AuctionItem, 'status' | 'endTime' | 'actualEndTime'> | null, now = Date.now()) {
+  if (!item) {
+    return false
+  }
+  const status = Number(item.status ?? 0)
+  if ([4, 5, 6, 7].includes(status)) {
+    return true
+  }
+  const endAt = parseTime(item.actualEndTime || item.endTime)
+  return endAt > 0 && endAt <= now
+}
+
+export function getAuctionDisplayStatus(item?: Pick<AuctionItem, 'status' | 'statusText' | 'endTime' | 'actualEndTime'> | null, now = Date.now()) {
+  if (!item) {
+    return {
+      status: undefined,
+      text: undefined,
+    }
+  }
+  const status = Number(item.status ?? 0)
+  if (isAuctionEnded(item, now) && status === 3) {
+    return {
+      status: 4,
+      text: '已结束',
+    }
+  }
+  return {
+    status: item.status,
+    text: item.statusText,
+  }
 }
 
 export function formatDuration(seconds: number) {

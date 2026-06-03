@@ -54,7 +54,7 @@ onMounted(loadSearch)
     <SectionHeader
       kicker="Search"
       title="全文搜索"
-      description="接入 `/api/search/items`，支持关键词、联想词、分面统计与搜索历史。"
+      description="支持关键词搜索、联想推荐与分类聚合，帮助你更快找到目标拍品。"
     />
 
     <section class="search-panel surface">
@@ -82,7 +82,7 @@ onMounted(loadSearch)
     <div v-if="items.length" v-loading="loading" class="auction-grid">
       <AuctionCard v-for="item in items" :key="item.id" :item="item" />
     </div>
-    <EmptyPanel v-else title="没有搜索结果" description="换个关键词，或确认 Elasticsearch 服务已启动并完成同步。" />
+    <EmptyPanel v-else title="没有搜索结果" description="换个关键词试试，也可以放宽筛选条件后重新搜索。" />
   </div>
 </template>
 

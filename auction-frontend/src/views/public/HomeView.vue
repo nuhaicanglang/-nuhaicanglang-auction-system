@@ -61,16 +61,16 @@ onMounted(async () => {
 
     <section class="page-shell page-stack">
       <div class="grid-4">
-        <MetricCard label="实时竞拍" value="WebSocket" hint="出价与成交状态秒级推送" />
-        <MetricCard label="资金安全" value="Idempotent" hint="出价、支付、调账防重复" tone="success" />
-        <MetricCard label="角色覆盖" value="3 Roles" hint="游客、用户、管理员一体化" tone="info" />
+        <MetricCard label="实时竞拍" value="秒级更新" hint="出价与成交动态即时刷新" />
+        <MetricCard label="资金安全" value="多重保障" hint="交易、支付与调账过程清晰可追踪" tone="success" />
+        <MetricCard label="角色覆盖" value="全角色协同" hint="游客、用户、管理员统一体验" tone="info" />
         <MetricCard label="体验标准" value="RWD" hint="桌面优先并适配移动端" tone="warning" />
       </div>
 
       <SectionHeader
         kicker="Categories"
         title="拍品分类"
-        description="分类树直接接入后端 `/api/categories/tree`，支持后台维护后同步展示。"
+        description="按品类快速浏览拍品，分类结构清晰，便于筛选与发现。"
       />
       <div class="category-grid">
         <button
@@ -88,7 +88,7 @@ onMounted(async () => {
       <SectionHeader
         kicker="Featured"
         title="正在进行的精选拍品"
-        description="使用真实商品列表接口，展示当前价、剩余时间、出价次数和围观热度。"
+        description="集中展示当前热度较高的拍品，查看价格、剩余时间与竞拍活跃度。"
       >
         <template #actions>
           <ElButton @click="router.push('/items')">查看全部</ElButton>
@@ -97,7 +97,7 @@ onMounted(async () => {
       <div v-if="featured.length" class="auction-grid">
         <AuctionCard v-for="item in featured" :key="item.id" :item="item" />
       </div>
-      <EmptyPanel v-else title="暂无上架拍品" description="后端审核通过拍品后，这里会自动展示精选数据。" />
+      <EmptyPanel v-else title="暂无上架拍品" description="稍后再来看看，更多精选拍品正在准备中。" />
     </section>
   </div>
 </template>

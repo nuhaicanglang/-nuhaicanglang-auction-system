@@ -5,6 +5,7 @@ import CountdownBadge from '@/components/common/CountdownBadge.vue'
 import PriceText from '@/components/common/PriceText.vue'
 import StatusTag from '@/components/common/StatusTag.vue'
 import { resolveAssetUrl } from '@/utils/assets'
+import { getAuctionDisplayStatus } from '@/utils/format'
 
 const props = defineProps<{
   item: AuctionItem
@@ -16,13 +17,15 @@ const coverStyle = computed(() => {
   }
   return { backgroundImage: `url(${resolveAssetUrl(props.item.coverImage)})` }
 })
+
+const displayStatus = computed(() => getAuctionDisplayStatus(props.item))
 </script>
 
 <template>
   <RouterLink class="auction-card surface" :to="`/items/${item.id}`">
     <div class="cover" :style="coverStyle">
       <span v-if="!item.coverImage">待上传封面</span>
-      <StatusTag class="status" :status="item.status" :text="item.statusText" />
+      <StatusTag class="status" :status="displayStatus.status" :text="displayStatus.text" />
     </div>
     <div class="body">
       <p class="category">{{ item.categoryPath || '精选拍品' }}</p>

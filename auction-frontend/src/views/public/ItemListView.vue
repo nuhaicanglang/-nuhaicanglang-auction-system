@@ -53,7 +53,7 @@ onMounted(async () => {
     <SectionHeader
       kicker="Auction Hall"
       title="拍品大厅"
-      description="按分类、价格、状态和关键词筛选拍品；所有数据优先来自真实后端接口。"
+      description="按分类、价格、状态和关键词筛选拍品，快速找到合适的竞拍目标。"
     />
 
     <ElForm class="filter surface" :model="query" label-position="top" @submit.prevent="loadItems">

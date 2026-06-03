@@ -14,7 +14,7 @@ import { useAuthStore } from '@/stores/auth'
 import type { AuctionItem, Bid } from '@/types/domain'
 import { AuctionSocket } from '@/services/auctionSocket'
 import { resolveAssetUrl } from '@/utils/assets'
-import { formatDateTime, normalizeRecords } from '@/utils/format'
+import { formatDateTime, getAuctionDisplayStatus, normalizeRecords } from '@/utils/format'
 
 const route = useRoute()
 const auth = useAuthStore()
@@ -25,6 +25,7 @@ const favoriteLoading = ref(false)
 const socket = new AuctionSocket()
 
 const cleanDescription = computed(() => DOMPurify.sanitize(item.value?.description || '<p>暂无详情描述。</p>'))
+const displayStatus = computed(() => getAuctionDisplayStatus(item.value))
 
 async function loadDetail() {
   const id = String(route.params.id)
@@ -92,7 +93,7 @@ onBeforeUnmount(() => socket.disconnect())
 
         <section class="info surface">
           <div class="title-row">
-            <StatusTag :status="item.status" :text="item.statusText" />
+            <StatusTag :status="displayStatus.status" :text="displayStatus.text" />
             <CountdownBadge :end-time="item.actualEndTime || item.endTime" />
             <ElButton class="favorite-button" :loading="favoriteLoading" plain @click="toggleFavorite">
               <Heart aria-hidden="true" :fill="favorited ? 'currentColor' : 'none'" />

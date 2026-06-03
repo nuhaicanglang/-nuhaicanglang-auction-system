@@ -5,7 +5,7 @@ import Decimal from 'decimal.js'
 import type { AuctionItem } from '@/types/domain'
 import { buyNow, placeBid } from '@/api/items'
 import PriceText from '@/components/common/PriceText.vue'
-import { formatMoney, toDecimal } from '@/utils/format'
+import { formatMoney, getAuctionDisplayStatus, toDecimal } from '@/utils/format'
 
 const props = defineProps<{
   item: AuctionItem
@@ -19,8 +19,9 @@ const emit = defineEmits<{
 const submitting = ref(false)
 const bidPrice = ref('')
 
-const canBid = computed(() => Number(props.item.status) === 3)
-const statusHint = computed(() => props.item.statusText || '当前状态不可出价')
+const displayStatus = computed(() => getAuctionDisplayStatus(props.item))
+const canBid = computed(() => Number(displayStatus.value.status) === 3)
+const statusHint = computed(() => displayStatus.value.text || '当前状态不可出价')
 const minBid = computed(() =>
   toDecimal(props.item.currentPrice ?? props.item.startPrice).plus(toDecimal(props.item.bidIncrement || 1)),
 )

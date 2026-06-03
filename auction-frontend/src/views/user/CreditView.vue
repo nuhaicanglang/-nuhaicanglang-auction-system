@@ -19,7 +19,7 @@ onMounted(async () => {
   <div class="page-stack">
     <div class="grid-3">
       <MetricCard label="当前信用分" :value="credit.score ?? '-'" :hint="credit.levelName" tone="success" />
-      <MetricCard label="信用状态" :value="credit.status ?? '-'" hint="状态由后端信用规则计算" tone="info" />
+      <MetricCard label="信用状态" :value="credit.status ?? '-'" hint="根据近期交易表现与履约情况综合评定" tone="info" />
       <MetricCard label="最近变动" :value="formatDateTime(credit.lastEventAt)" tone="warning" />
     </div>
     <ElTable v-if="logs.length" :data="logs" border>
