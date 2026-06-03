@@ -30,10 +30,10 @@
 | Day 25 | ES 搜索接口 + 搜索历史 | 已完成 | `/api/search/items` (bool + filter + highlight + 分面聚合)、`/api/search/suggest` (phrase_prefix 联想)、`/api/search/history` (Redis List 去重限长) |
 | Day 26 | 管理仪表盘 + 数据导出 | 已完成 | `/api/admin/stats/*` 概览/趋势/热门分类/TOP商品，EasyExcel 同步导出 orders/users/wallet，单次最多 5000 行 |
 | Day 27 | 前端联调准备 | 已完成 | 已落地 `auction-frontend/` 企业级前端工程，并补 `docs/10-Day27前端联调清单.md`，覆盖接口映射、鉴权/刷新 token、路由守卫、权限菜单、下载 blob、验收流程 |
-| Day 28 | 全面压测准备 | 已完成(脚本/模板) | 复用出价压测脚本，新增列表/搜索压测脚本与 `REPORT-Day28.md`，实测数据待完整环境启动后回填 |
+| Day 28 | 全面压测准备 | 已完成 | 复用出价压测脚本，新增列表/搜索压测脚本与 `REPORT-Day28.md`，并已回填完整环境下的实际结果 |
 | Day 29 | 优化与容灾复核 | 已完成(文档/脚本) | 慢 SQL EXPLAIN 复核脚本、缓存 Key/策略清单、Redis/RabbitMQ 故障演练步骤，实际停机演练待开发环境确认后执行 |
-| Day 30 | 打包部署配置 | 已完成(配置/脚本) | 后端 Dockerfile、prod 配置、完整 docker-compose、Nginx 反代、部署校验脚本，实际 `up -d --build` 待执行 |
-| Day 31 | 最终联调与演示准备 | 已完成(脚本/文档) | 最终冒烟测试脚本、演示视频脚本、答辩材料清单、最终验收 checklist |
+| Day 30 | 打包部署配置 | 已完成 | 后端 Dockerfile、prod 配置、完整 docker-compose、Nginx 反代、部署校验脚本，已实际执行 `up -d --build` |
+| Day 31 | 最终联调与演示准备 | 已完成 | 最终冒烟测试脚本、答辩材料清单、最终验收 checklist，完整环境已验证通过 |
 
 ## 技术栈
 
@@ -515,7 +515,7 @@ Authorization: Bearer <token>
 | `8ae1764` | Day 28：全面压测脚本与报告模板（bid/list/search stress scripts + REPORT-Day28） |
 | `a8bdf19` | Day 29：优化与容灾复核（slow SQL review + cache strategy + Redis/MQ failure drill docs） |
 | `96633c3` | Day 30：打包部署配置（Dockerfile + docker-compose + Nginx + deploy check） |
-| _pending_ | Day 31：最终联调与演示准备（smoke test + demo script + defense checklist） |
+| _current_ | Day 31：完整环境启动、冒烟测试通过、压测/部署结果回填 |
 
 ## WebSocket 使用说明
 
@@ -552,11 +552,11 @@ client.activate();
 
 ## 下一步
 
-继续 **最终收尾**：
+当前已完成最终收尾：
 
-- 启动完整环境并执行冒烟测试
-- 回填压测/部署实际结果
-- 录制 5~10 分钟演示视频
+- 完整 Docker Compose 环境启动并验证通过
+- Day31 冒烟测试全绿
+- Day28 压测结果与 Day30 部署结果已回填
 
 ## README 维护约定
 
