@@ -4,6 +4,7 @@ import type { AuctionItem } from '@/types/domain'
 import CountdownBadge from '@/components/common/CountdownBadge.vue'
 import PriceText from '@/components/common/PriceText.vue'
 import StatusTag from '@/components/common/StatusTag.vue'
+import { resolveAssetUrl } from '@/utils/assets'
 
 const props = defineProps<{
   item: AuctionItem
@@ -13,7 +14,7 @@ const coverStyle = computed(() => {
   if (!props.item.coverImage) {
     return {}
   }
-  return { backgroundImage: `url(${props.item.coverImage})` }
+  return { backgroundImage: `url(${resolveAssetUrl(props.item.coverImage)})` }
 })
 </script>
 

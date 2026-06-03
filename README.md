@@ -29,7 +29,7 @@
 | Day 24 | ES 索引与同步 | 已完成 | `ItemDoc`(`auction_items` 索引 + ik 中文分词)、`ItemDocRepository`、`EsInitRunner` 启动全量同步、`EsSyncConsumer` 消费 `item.sync.queue` 增量同步、商品状态/价格/出价数变更触发 UPSERT、下架触发 DELETE |
 | Day 25 | ES 搜索接口 + 搜索历史 | 已完成 | `/api/search/items` (bool + filter + highlight + 分面聚合)、`/api/search/suggest` (phrase_prefix 联想)、`/api/search/history` (Redis List 去重限长) |
 | Day 26 | 管理仪表盘 + 数据导出 | 已完成 | `/api/admin/stats/*` 概览/趋势/热门分类/TOP商品，EasyExcel 同步导出 orders/users/wallet，单次最多 5000 行 |
-| Day 27 | 前端联调准备 | 已完成(文档) | 当前仓库暂无前端工程，已补 `docs/10-Day27前端联调清单.md`，覆盖接口映射、鉴权/刷新 token、路由守卫、权限菜单、下载 blob、验收流程 |
+| Day 27 | 前端联调准备 | 已完成 | 已落地 `auction-frontend/` 企业级前端工程，并补 `docs/10-Day27前端联调清单.md`，覆盖接口映射、鉴权/刷新 token、路由守卫、权限菜单、下载 blob、验收流程 |
 | Day 28 | 全面压测准备 | 已完成(脚本/模板) | 复用出价压测脚本，新增列表/搜索压测脚本与 `REPORT-Day28.md`，实测数据待完整环境启动后回填 |
 | Day 29 | 优化与容灾复核 | 已完成(文档/脚本) | 慢 SQL EXPLAIN 复核脚本、缓存 Key/策略清单、Redis/RabbitMQ 故障演练步骤，实际停机演练待开发环境确认后执行 |
 | Day 30 | 打包部署配置 | 已完成(配置/脚本) | 后端 Dockerfile、prod 配置、完整 docker-compose、Nginx 反代、部署校验脚本，实际 `up -d --build` 待执行 |
@@ -70,6 +70,7 @@
 - **本地存储**：开发环境默认保存到 `./uploads`。
 - **MinIO 适配**：保留 MinIO 条件加载实现，后续可切换对象存储。
 - **静态资源映射**：本地上传文件可通过 `/uploads/**` 访问。
+- **前后端分离访问**：开发时前端 `5173` 会将 `/uploads/**` 自动指向后端 `8080`，而 `/sample-items/**` 样例图继续走前端静态资源。
 - **大小限制**：单文件 5MB，总请求 30MB。
 
 ### 4. 拍卖商品
@@ -86,6 +87,7 @@
 - **Redis 预热**：应用启动扫描拍卖中商品，将当前价写入 Redis。
 - **Lua 原子出价**：在 Redis 端完成幂等、价格比较、更新当前价、入队。
 - **出价记录**：成功出价写入 `biz_bid`，可查询商品出价记录。
+- **我的竞拍**：已提供 `GET /api/me/bids`，用于用户中心展示竞拍历史、领先/中标状态。
 - **出价校验链**：责任链 + 模板方法实现参数、状态、身份、频率、价格校验。
 - **频率限制**：同一用户同一商品 1 秒内只能出价一次。
 - **WebSocket 推送**：出价成功后广播 `/topic/auction/{itemId}`，状态变化广播 `/topic/auction/{itemId}/state`。
@@ -102,6 +104,7 @@
 │   ├── docker-compose.middleware.yml
 │   ├── mysql/
 │   └── redis/
+├── auction-frontend/             # Vue 3 企业级前端：公共端、用户中心、管理后台
 └── auction-backend/              # Spring Boot 多模块后端
     ├── auction-admin/            # 启动入口
     ├── auction-common/           # 通用返回、异常、工具
@@ -143,6 +146,20 @@ mvn -pl auction-admin -am package -DskipTests
 java -jar auction-admin/target/auction-admin-1.0.0-SNAPSHOT.jar --spring.profiles.active=dev
 ```
 
+### 4. 启动前端
+
+```powershell
+cd auction-frontend
+npm install
+npm run dev
+```
+
+默认访问地址：
+
+```text
+http://127.0.0.1:5173/
+```
+
 健康检查：
 
 ```powershell
@@ -159,7 +176,7 @@ Invoke-RestMethod http://localhost:8080/api/ping
 }
 ```
 
-### 4. 接口文档
+### 5. 接口文档
 
 应用启动后可访问：
 
@@ -311,6 +328,15 @@ GET /api/items/{itemId}/bids?page=1&size=20
 ```
 
 返回记录按出价时间倒序排列，出价人显示为脱敏格式。
+
+### 我的竞拍
+
+```http
+GET /api/me/bids?page=1&size=10
+Authorization: Bearer <token>
+```
+
+用于用户中心查看参与过的拍卖、我的最新出价、当前价以及领先/中标状态。
 
 ## 主要数据表
 

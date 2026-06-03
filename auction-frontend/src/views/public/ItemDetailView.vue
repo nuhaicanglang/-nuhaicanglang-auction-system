@@ -13,6 +13,7 @@ import { addFavorite, getFavoriteStatus, getItem, listBids, removeFavorite } fro
 import { useAuthStore } from '@/stores/auth'
 import type { AuctionItem, Bid } from '@/types/domain'
 import { AuctionSocket } from '@/services/auctionSocket'
+import { resolveAssetUrl } from '@/utils/assets'
 import { formatDateTime, normalizeRecords } from '@/utils/format'
 
 const route = useRoute()
@@ -81,11 +82,11 @@ onBeforeUnmount(() => socket.disconnect())
     <template v-if="item">
       <section class="detail-grid">
         <div class="gallery surface">
-          <div class="cover" :style="item.coverImage ? { backgroundImage: `url(${item.coverImage})` } : {}">
+          <div class="cover" :style="item.coverImage ? { backgroundImage: `url(${resolveAssetUrl(item.coverImage)})` } : {}">
             <span v-if="!item.coverImage">待上传封面</span>
           </div>
           <div class="thumbs">
-            <img v-for="url in item.images" :key="url" :src="url" alt="拍品详情图" />
+            <img v-for="url in item.images" :key="url" :src="resolveAssetUrl(url)" alt="拍品详情图" />
           </div>
         </div>
 

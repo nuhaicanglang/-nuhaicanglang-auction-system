@@ -29,6 +29,13 @@ VITE_API_BASE_URL=http://localhost:8080
 VITE_WS_BASE_URL=http://localhost:8080
 ```
 
+开发环境下有两类图片资源：
+
+- 后端上传文件：`/uploads/**`，前端会自动拼接到 `VITE_API_BASE_URL`
+- 前端静态样例图：`/sample-items/**`，继续由 Vite 本地静态资源提供
+
+这样在 `5173` 前端开发服务和 `8080` 后端接口分开运行时，上传图和样例图都能正确显示。
+
 ## 验证命令
 
 ```bash
@@ -36,6 +43,20 @@ npm run typecheck
 npm run lint
 npm run build
 ```
+
+账号密码：
+
+| 账号 | 密码 | 用途 |
+|---|---|---|
+| `admin` | `123456` | 超级管理员 |
+| `ops_admin` | `123456` | 运营管理员 |
+| `seller_art` | `123456` | 艺术品卖家 |
+| `seller_digital` | `123456` | 数码卖家 |
+| `seller_luxury` | `123456` | 奢侈品卖家 |
+| `buyer_vip` | `123456` | 企业采购买家 |
+| `buyer_standard` | `123456` | 个人收藏买家 |
+| `buyer_risk` | `123456` | 信用观察用户 |
+| `blacklisted_user` | `123456` | 黑名单演示用户，不可登录 |
 
 ## 真实接口优先
 
@@ -53,13 +74,20 @@ npm run build
 - `/api/admin/**`
 - `/api/ws?token=...`
 
-以下企业级能力已预留页面入口，但等待后端公开查询接口：
+当前已经补齐的企业级接口与页面：
 
 - 我的收藏：`GET /api/me/favorites`
-- 站内信列表/已读：`GET /api/me/notifications`
+- 收藏状态/收藏操作：`GET|POST|DELETE /api/items/{id}/favorite`
+- 站内信列表/已读：`GET /api/me/notifications`、`PUT /api/me/notifications/{id}/read`
 - 我的竞拍汇总：`GET /api/me/bids`
 - 后台订单总表：`GET /api/admin/orders`
 - 操作日志查询：`GET /api/admin/logs`
+
+当前仍属于后端待补的能力：
+
+- 异步导出任务中心
+- 更完整的站内信筛选能力
+- 管理端更细粒度的操作审计聚合视图
 
 ## 设计说明
 

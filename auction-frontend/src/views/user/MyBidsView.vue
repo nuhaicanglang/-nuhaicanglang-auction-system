@@ -5,6 +5,7 @@ import EmptyPanel from '@/components/common/EmptyPanel.vue'
 import StatusTag from '@/components/common/StatusTag.vue'
 import { listMyBids } from '@/api/items'
 import type { MyBid } from '@/types/domain'
+import { resolveAssetUrl } from '@/utils/assets'
 import { formatDateTime, formatMoney, normalizeRecords, normalizeTotal, safeText } from '@/utils/format'
 
 const router = useRouter()
@@ -67,7 +68,7 @@ onMounted(loadMyBids)
       <ElTableColumn label="拍品" min-width="320">
         <template #default="{ row }">
           <div class="item-cell">
-            <img v-if="row.itemCoverImage" :src="row.itemCoverImage" :alt="row.itemTitle || '拍品'" />
+            <img v-if="row.itemCoverImage" :src="resolveAssetUrl(row.itemCoverImage)" :alt="row.itemTitle || '拍品'" />
             <div>
               <button type="button" class="item-link" @click="goDetail(row.itemId)">{{ safeText(row.itemTitle) }}</button>
               <p class="muted">结束时间：{{ formatDateTime(row.endTime) }}</p>

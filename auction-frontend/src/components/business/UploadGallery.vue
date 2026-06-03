@@ -3,6 +3,7 @@ import { ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Upload } from '@lucide/vue'
 import { uploadImage } from '@/api/upload'
+import { resolveAssetUrl } from '@/utils/assets'
 
 const model = defineModel<string[]>({ default: [] })
 
@@ -45,7 +46,7 @@ function removeAt(index: number) {
   <div class="upload-gallery">
     <div class="gallery-grid">
       <div v-for="(url, index) in model" :key="url" class="image-tile">
-        <img :src="url" alt="拍品图片" />
+        <img :src="resolveAssetUrl(url)" alt="拍品图片" />
         <ElButton size="small" type="danger" plain @click="removeAt(index)">移除</ElButton>
       </div>
       <button class="upload-tile" type="button" :disabled="uploading" @click="fileInput?.click()">
